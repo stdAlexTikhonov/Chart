@@ -21,6 +21,7 @@ function ( qlik, d3, cssContent,  prop) {
       exportData: true
     },
     paint: function ($element, layout) {
+
       var hc = layout.qHyperCube;
       var id = '_' + layout.qInfo.qId;
 
@@ -85,8 +86,14 @@ function ( qlik, d3, cssContent,  prop) {
             }));
           }));
 
-          var stackMaxY = d3.max(totals);
+          var minY = d3.min(allMeasures.map(function(c){
+            return d3.min(data.map(function(d) {
+              return d[c];
+            }));
+          }));
 
+          var stackMaxY = d3.max(totals);
+          var stackMinY = d3.min(totals);
 
 
           var lines = causesLines.map(function(c) {
@@ -164,7 +171,10 @@ function ( qlik, d3, cssContent,  prop) {
 
 
           var y = d3.scale.linear()
-            .domain([0, function() {
+            .domain([function() {
+              if (stackMinY < minY) return stackMinY;
+              else return minY;
+            }(), function() {
               if (stackMaxY > maxY) return stackMaxY;
               else return maxY;
             }()])
@@ -201,7 +211,7 @@ function ( qlik, d3, cssContent,  prop) {
           if (layout.props.axisX == 1) {
   					chart.append("g")
   						.attr("class", "x axis")
-  						.attr("transform", "translate(0," + height + ")")
+  						.attr("transform", "translate(0," + y(0) + ")")
   						.call(xAxis)
   				} else {
   					chart.select('x ')
