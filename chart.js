@@ -2,6 +2,35 @@ define( [ "qlik", "d3", "text!./chart.css",'./properties'
 ],
 function ( qlik, d3, cssContent,  prop) {
   $( "<style>" ).html( cssContent ).appendTo( "head" );
+
+  function barStack(seriesData) {
+    	var l = seriesData[0].length
+    	while (l--) {
+    		var posBase = 0; // positive base
+    		var negBase = 0; // negative base
+
+    		seriesData.forEach(function(d) {
+    			d = d[l]
+    			d.size = Math.abs(d.y)
+    			if (d.y < 0) {
+    				d.y0 = negBase
+    				negBase -= d.size
+    			} else
+    			{
+    				d.y0 = posBase = posBase + d.size
+    			}
+    		})
+    	}
+    	seriesData.extent = d3.extent(
+    		d3.merge(
+    			d3.merge(
+    				seriesData.map(function(e) {
+    					return e.map(function(f) { return [f.y0,f.y0-f.size] })
+    				})
+    			)
+    		)
+    	)
+    }
   return {
     definition: prop,
     initialProperties: {
@@ -21,7 +50,6 @@ function ( qlik, d3, cssContent,  prop) {
       exportData: true
     },
     paint: function ($element, layout) {
-
       var hc = layout.qHyperCube;
       var id = '_' + layout.qInfo.qId;
 
@@ -30,7 +58,7 @@ function ( qlik, d3, cssContent,  prop) {
 
 
 
-//Подготовка данных
+    //Подготовка данных
 
       var causesLines = [];
       var causesBars = [];
@@ -51,7 +79,7 @@ function ( qlik, d3, cssContent,  prop) {
            causesBars.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color:  hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor });
            bartitles.push(hc.qMeasureInfo[i].qFallbackTitle);
          }
-         legendColors.push({ color:hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor });
+         legendColors.push({ color:hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, meraLegend:  hc.qMeasureInfo[i].meraLegend });
 
       }
 
@@ -62,16 +90,22 @@ function ( qlik, d3, cssContent,  prop) {
             var arr = hc.qDataPages[0].qMatrix[r];
 
             total = 0;
+            totalNegstive = 0;
             row = {};
             for (var c = 0; c < arr.length; c++) {
               if ( c == 0 ) row[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qText;
               else {
                 row[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qNum;
                 row[allMeasures[c] + '_f'] = hc.qDataPages[0].qMatrix[r][c].qText;
-                if (bartitles.indexOf(allMeasures[c]) > -1) total += row[allMeasures[c]];
+                if (bartitles.indexOf(allMeasures[c]) > -1) {
+                  if (row[allMeasures[c]] < 0) {
+                    totalNegstive += row[allMeasures[c]];
+                  } else total += row[allMeasures[c]];
+                }
               }
             }
             data.push(row);
+            totals.push(totalNegstive);
             totals.push(total);
           }
 
@@ -92,8 +126,15 @@ function ( qlik, d3, cssContent,  prop) {
             }));
           }));
 
+
           var stackMaxY = d3.max(totals);
+
           var stackMinY = d3.min(totals);
+
+      minY = minY > 0? 0: minY;
+
+      stackMinY = stackMinY > 0 ? 0: stackMinY;
+
 
 
           var lines = causesLines.map(function(c) {
@@ -107,11 +148,13 @@ function ( qlik, d3, cssContent,  prop) {
 
 
           if(layout.props.typeBar == "stacked") {
-            var stacked = d3.layout.stack()(causesBars.map(function(c) {
+            // d3.layout.stack()(
+            var stacked = causesBars.map(function(c) {
               return data.map(function(d) {
                 return { x: d[dimension], y: d[c.title], formatted: d[c.title + '_f'], textColor: c.textColor};
               });
-            }));
+            });
+            if(causesBars.length >0) barStack(stacked);
           } else {
             var grouped = causesBars.map(function(c) {
               return data.map(function(d){
@@ -125,7 +168,7 @@ function ( qlik, d3, cssContent,  prop) {
 
 
 
-//Оси + заголовки
+    //Оси + заголовки
           var titleX = layout.props.titleX?15:0;
 
 
@@ -158,7 +201,7 @@ function ( qlik, d3, cssContent,  prop) {
           var height = h - margin.top - margin.bottom;
 
           $element.append("<canvas id='canvas' width='"+ w +"' height='"+ h +"'></canvas>");
-          $element.append("<div id='png-container'></div>");
+          $element.append("<div id='png-container"+ id +"'></div>");
 
           var x = d3.scale.ordinal()
             .domain(data.map(function(d) { return d[dimension]; }))
@@ -170,17 +213,11 @@ function ( qlik, d3, cssContent,  prop) {
               .rangeBands([0, x.rangeBand()]);
 
 
-          var y = d3.scale.linear()
-            .domain([function() {
-              if (stackMinY < minY) return stackMinY;
-              else return minY;
-            }(), function() {
-              if (stackMaxY > maxY) return stackMaxY;
-              else return maxY;
-            }()])
+
+      var y = d3.scale.linear()
+            .domain([ stackMinY < minY && layout.props.typeBar == "stacked"? stackMinY:minY, stackMaxY > maxY? stackMaxY:maxY])
             .range([height, 0]);
 
-          var z = d3.scale.category10();
 
 
           var valueline = d3.svg.line()
@@ -199,49 +236,17 @@ function ( qlik, d3, cssContent,  prop) {
 
 
 
-//выводим картинку
+    //выводим картинку
           var chart = d3.select("#" + id)
-  				  .attr("width", width + margin.left + margin.right)
-  				  .attr("height", height + margin.top + margin.bottom)
-  				.append("g")
-  				  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-//Оси
-          if (layout.props.axisX == 1) {
-  					chart.append("g")
-  						.attr("class", "x axis")
-  						.attr("transform", "translate(0," + y(0) + ")")
-  						.call(xAxis)
-  				} else {
-  					chart.select('x ')
-  						.style("display", 'none')
-  				}
-
-          if (layout.props.axisY == 1) {
-            chart.append("g")
-              .attr("class", "y axis")
-              .call(yAxis)
-          } else if (layout.props.axisY == 0) {
-            chart.select('y')
-              .style("display", 'none')
-          }
-
-          $('.axis text').css({'fill':'#707070', 'font': '10px sans-serif'});
-          $('.axis path, .axis line').css({ 'fill': 'none','stroke':'#CCC', 'shape-rendering':'crispEdges'});
 
 
-          d3.select("#" + id).append('text')
-            .text(hc.qDimensionInfo[0].qFallbackTitle)
-            .attr('x', width/2 + margin.left)
-            .attr('y', height+margin.top+margin.bottom)
-            .attr("text-anchor", "middle")
-            .style('display', function() {
-              if ( layout.props.titleX == false )
-              return 'none';
-            })
-
-//Столбцы
+    //Столбцы
       if(layout.props.typeBar == "stacked") {
         var rects = chart.selectAll(".layer")
             .data(stacked)
@@ -254,8 +259,8 @@ function ( qlik, d3, cssContent,  prop) {
             .data(function(d) { return d; })
           .enter().append("rect")
             .attr("x", function(d) { return x(d.x); })
-            .attr("y", function(d) { return y(d.y + d.y0); })
-            .attr("height", function(d) { return y(d.y0) - y(d.y + d.y0); })
+            .attr("y", function(d) { return y(d.y0); }) //y(d.y + d.y0);
+            .attr("height", function(d) { return y(0) - y(d.size); })//y(d.y0) - y(d.y + d.y0);
             .attr("width", x.rangeBand() - 1);
 
           if ( layout.props.barsValues ) {
@@ -265,42 +270,46 @@ function ( qlik, d3, cssContent,  prop) {
                })
               .enter().append('g')
               .attr("transform", function(d) {
-                if( layout.props.barValHorizontalAlign == "left" && layout.props.barValVerticalAlign == "middle") {
-                  return "translate(" + x(d.x)  +"," + (y(d.y/2 + d.y0)) +")";
-                } else if ( layout.props.barValHorizontalAlign == "center"  && layout.props.barValVerticalAlign == "middle") {
-                  return "translate(" + (x(d.x) + x.rangeBand()/2) +"," + (y(d.y/2 + d.y0)) +")";
-                } else if ( layout.props.barValHorizontalAlign == "right"  && layout.props.barValVerticalAlign == "middle" ) {
-                  return "translate(" + (x(d.x) + x.rangeBand()) +"," + (y(d.y/2 + d.y0)) +")";
-                } else if( layout.props.barValHorizontalAlign == "left" && layout.props.barValVerticalAlign == "top") {
-                  return "translate(" + x(d.x)  +"," + (y(d.y + d.y0)+layout.props.barFontSize) +")";
-                } else if ( layout.props.barValHorizontalAlign == "center"  && layout.props.barValVerticalAlign == "top") {
-                  return "translate(" + (x(d.x) + x.rangeBand()/2) +"," + (y(d.y + d.y0)+layout.props.barFontSize) +")";
-                } else if ( layout.props.barValHorizontalAlign == "right"  && layout.props.barValVerticalAlign == "top" ) {
-                  return "translate(" + (x(d.x) + x.rangeBand()) +"," + (y(d.y + d.y0)+layout.props.barFontSize) +")";
-                } else if( layout.props.barValHorizontalAlign == "left" && layout.props.barValVerticalAlign == "bottom") {
-                  return "translate(" + x(d.x)  +"," + y(d.y0) +")";
-                } else if ( layout.props.barValHorizontalAlign == "center"  && layout.props.barValVerticalAlign == "bottom") {
-                  return "translate(" + (x(d.x) + x.rangeBand()/2) +"," + y(d.y0) +")";
-                } else if ( layout.props.barValHorizontalAlign == "right"  && layout.props.barValVerticalAlign == "bottom" ) {
-                  return "translate(" + (x(d.x) + x.rangeBand()) +"," + y(d.y0) +")";
+                // if( layout.props.barValHorizontalAlign == "left" && layout.props.barValVerticalAlign == "middle") {
+                //   return "translate(" + x(d.x)  +"," + (y(d.y/2)) +")";
+                // } else if ( layout.props.barValHorizontalAlign == "center"  && layout.props.barValVerticalAlign == "middle") {
+                //   return "translate(" + (x(d.x) + x.rangeBand()/2) +"," +y( d.y/2) +")";
+                // } else if ( layout.props.barValHorizontalAlign == "right"  && layout.props.barValVerticalAlign == "middle" ) {
+                //   return "translate(" + (x(d.x) + x.rangeBand()) +"," + (y(d.y/2) + y(d.y0)) +")";
+                // if( layout.props.barValHorizontalAlign == "left" ) {
+                //   return "translate(" + (x(d.x)+layout.props.barFontSize*1.5)  +"," + (y(d.y0)+layout.props.barFontSize*1.1) +")";
+                // } else if ( layout.props.barValHorizontalAlign == "center") {
+                if ( layout.props.barValVerticalAlign == "middle") {
+                  if ( d.y < 0) return "translate(" + (x(d.x) + x.rangeBand()/2) +"," + (y(d.y0 + d.y/2)+layout.props.barFontSize*0.5 + layout.props.barTextOffset*-1) +")";
+                  else return "translate(" + (x(d.x) + x.rangeBand()/2) +"," + (y(d.y0 - d.y/2)+layout.props.barFontSize*0.5 + layout.props.barTextOffset) +")";
+                } else {
+                  if ( d.y < 0) return "translate(" + (x(d.x) + x.rangeBand()/2) +"," + (y(d.y0 + d.y)+layout.props.barFontSize*-0.5 + layout.props.barTextOffset*-1) +")";
+                  else return "translate(" + (x(d.x) + x.rangeBand()/2) +"," + (y(d.y0)+layout.props.barFontSize*1.1 + layout.props.barTextOffset) +")";
                 }
+                // } else if ( layout.props.barValHorizontalAlign == "right") {
+                //   return "translate(" + ((x(d.x) + x1.rangeBand())-+layout.props.barFontSize*1.5) +"," + (y(d.y0)+layout.props.barFontSize*1.5) +")";
+                // }
+                // } else if( layout.props.barValHorizontalAlign == "left" && layout.props.barValVerticalAlign == "bottom") {
+                //   return "translate(" + x(d.x)  +"," + y(0) +")";
+                // } else if ( layout.props.barValHorizontalAlign == "center"  && layout.props.barValVerticalAlign == "bottom") {
+                //   return "translate(" + (x(d.x) + x.rangeBand()/2) +"," + y(d.y0 + d.y) +")";
+                // } else if ( layout.props.barValHorizontalAlign == "right"  && layout.props.barValVerticalAlign == "bottom" ) {
+                //   return "translate(" + (x(d.x) + x.rangeBand()) +"," + y(0) +")";
+                // }
 
               })
+              //.attr("text-anchor", "middle")
               .attr('display', function(d) {
-                if(( height - y(d.y)) < 15) return 'none';
+                if(Math.abs(y(0) - y(d.size)) < 15) return 'none';
               })
               .append('text')
-              // .attr("x", function(d) { return x(d.x) + x.rangeBand()/2 ; })
-              // .attr("y", function(d) { return y(d.y/2 + d.y0)+ 10; })
-              .attr("text-anchor", function(d) {
-                if( layout.props.barValHorizontalAlign == "left") {
-                  return "start";
-                } else if ( layout.props.barValHorizontalAlign == "center") {
-                  return "middle";
-                } else {
-                  return "end";
-                }
-              })
+
+              // .attr("text-anchor", function(d) {
+              //   if ( x.rangeBand() < 50 && d.y > 0 ) return "end";
+              //   else if (x.rangeBand() < 50 && d.y > 0 ) return "start";
+              //   else return "middle";
+              // })
+              .attr("text-anchor", "middle")
               .text(function(d,i) {
                 return d.formatted;
               })
@@ -310,6 +319,11 @@ function ( qlik, d3, cssContent,  prop) {
               })
               .style('fill', function(d) { return d.textColor; })
               .attr("transform", "rotate("+ layout.props.barValAngle +")")
+        .attr("dy",  function(d) {
+        if(layout.props.barValAngle == 0) return 0
+        else return 3;
+        });
+
           }
 
       } else {
@@ -323,9 +337,15 @@ function ( qlik, d3, cssContent,  prop) {
             .data(function(d) { return d; })
           .enter().append("rect")
             .attr("width", x1.rangeBand())
-            .attr("height", function(d) { return height - y(d.y); })
+            .attr("height", function(d) {
+              if ( d.y >= 0 ) return y(0) - y(d.y);
+              else return y(d.y) - y(0);
+            }) //y(d.y) - y(0); - negative
             .attr("x", function(d, i) { return x(d.x); })
-            .attr("y", function(d) { return  y(d.y); });
+            .attr("y", function(d) {
+              if (d.y >=0) return  y(d.y);
+              else return y(0);
+            });//y(0) - negative
 
 
           if ( layout.props.barsValues ) {
@@ -335,39 +355,44 @@ function ( qlik, d3, cssContent,  prop) {
               .enter().append('g')
               // .attr("transform", function(d) { return "translate(" + (x(d.x))  +"," + (y(d.y/2)) +")"; })
               .attr("transform", function(d) {
-                if( layout.props.barValHorizontalAlign == "left" && layout.props.barValVerticalAlign == "middle") {
-                  return "translate(" + x(d.x)  +"," + y(d.y/2) +")";
-                } else if ( layout.props.barValHorizontalAlign == "center"  && layout.props.barValVerticalAlign == "middle") {
-                  return "translate(" + (x(d.x) + x1.rangeBand()/2) +"," + y(d.y/2) +")";
-                } else if ( layout.props.barValHorizontalAlign == "right"  && layout.props.barValVerticalAlign == "middle" ) {
-                  return "translate(" + (x(d.x) + x1.rangeBand()) +"," + y(d.y/2) +")";
-                } else if( layout.props.barValHorizontalAlign == "left" && layout.props.barValVerticalAlign == "top") {
-                  return "translate(" + x(d.x)  +"," + (y(d.y)+layout.props.barFontSize) +")";
-                } else if ( layout.props.barValHorizontalAlign == "center"  && layout.props.barValVerticalAlign == "top") {
-                  return "translate(" + (x(d.x) + x1.rangeBand()/2) +"," + (y(d.y)+layout.props.barFontSize) +")";
-                } else if ( layout.props.barValHorizontalAlign == "right"  && layout.props.barValVerticalAlign == "top" ) {
-                  return "translate(" + (x(d.x) + x1.rangeBand()) +"," + (y(d.y)+layout.props.barFontSize) +")";
-                } else if( layout.props.barValHorizontalAlign == "left" && layout.props.barValVerticalAlign == "bottom") {
-                  return "translate(" + x(d.x)  +"," + height +")";
-                } else if ( layout.props.barValHorizontalAlign == "center"  && layout.props.barValVerticalAlign == "bottom") {
-                  return "translate(" + (x(d.x) + x1.rangeBand()/2) +"," + height +")";
-                } else if ( layout.props.barValHorizontalAlign == "right"  && layout.props.barValVerticalAlign == "bottom" ) {
-                  return "translate(" + (x(d.x) + x1.rangeBand()) +"," + height +")";
-                }
+                // if( layout.props.barValHorizontalAlign == "left" && layout.props.barValVerticalAlign == "middle") {
+                //   return "translate(" + x(d.x)  +"," + y(d.y/2) +")";
+                // } else if ( layout.props.barValHorizontalAlign == "center"  && layout.props.barValVerticalAlign == "middle") {
+                //   return "translate(" + (x(d.x) + x1.rangeBand()/2) +"," + y(d.y/2) +")";
+                // } else if ( layout.props.barValHorizontalAlign == "right"  && layout.props.barValVerticalAlign == "middle" ) {
+                //   return "translate(" + (x(d.x) + x1.rangeBand()) +"," + y(d.y/2) +")";
+                // if( layout.props.barValHorizontalAlign == "left") {
+                //   return "translate(" + (x(d.x)+layout.props.barFontSize*1.5)  +"," + (y(d.y)+layout.props.barFontSize*1.5) +")";
+                // } else if ( layout.props.barValHorizontalAlign == "center") {
+
+                  if ( layout.props.barValVerticalAlign == "middle") {
+                    if (d.y < 0)   return "translate(" + (x(d.x) + x1.rangeBand()/2) +"," + (y(0 + d.y/2)+layout.props.barFontSize*-0.5 + layout.props.barTextOffset*-1) +")";
+                    else   return "translate(" + (x(d.x) + x1.rangeBand()/2) +"," + (y(0 + d.y/2)+layout.props.barFontSize*0.5 + layout.props.barTextOffset) +")";
+                  } else {
+                    if (d.y < 0)   return "translate(" + (x(d.x) + x1.rangeBand()/2) +"," + (y(d.y)+layout.props.barFontSize*-0.9 + layout.props.barTextOffset*-1) +")";
+                    else   return "translate(" + (x(d.x) + x1.rangeBand()/2) +"," + (y(d.y)+layout.props.barFontSize*1.1 + layout.props.barTextOffset) +")";
+                  }
+                // } else if ( layout.props.barValHorizontalAlign == "right") {
+                //   return "translate(" + ((x(d.x) + x1.rangeBand())+layout.props.barFontSize*1.5) +"," + (y(d.y)+layout.props.barFontSize*1.5) +")";
+                // }
+                // } else if( layout.props.barValHorizontalAlign == "left" && layout.props.barValVerticalAlign == "bottom") {
+                //   return "translate(" + x(d.x)  +"," + y(0) +")";
+                // } else if ( layout.props.barValHorizontalAlign == "center"  && layout.props.barValVerticalAlign == "bottom") {
+                //   return "translate(" + (x(d.x) + x1.rangeBand()/2) +"," + y(0) +")";
+                // } else if ( layout.props.barValHorizontalAlign == "right"  && layout.props.barValVerticalAlign == "bottom" ) {
+                //   return "translate(" + (x(d.x) + x1.rangeBand()) +"," + y(0) +")";
+                // }
               })
               .append('text')
               .attr('display', function(d) {
-                if(( height - y(d.y)) < (layout.props.barFontSize + 5)) return 'none';
+                if(Math.abs(y(0) - y(d.y)) < 15) return 'none';
               })
-              .attr("text-anchor", function(d) {
-                if( layout.props.barValHorizontalAlign == "left") {
-                  return "start";
-                } else if ( layout.props.barValHorizontalAlign == "center") {
-                  return "middle";
-                } else {
-                  return "end";
-                }
-              })
+              .attr("text-anchor","middle")
+              // .attr("text-anchor", function(d) {
+              //   if ( x.rangeBand() < 50 ) return "end";
+              //   else return "middle";
+              // })
+
               .text(function(d) {
                 return d.formatted;
               })
@@ -377,13 +402,49 @@ function ( qlik, d3, cssContent,  prop) {
               })
               .style('fill', function(d) { return d.textColor; })
               .attr("transform", "rotate("+ layout.props.barValAngle +")")
+        .attr("dy",  function(d) {
+        if(layout.props.barValAngle == 0) return 0
+        else return 3;
+        });
           }
       }
 
+      //Оси
+        if (layout.props.axisX == 1) {
+          chart.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis)
+        } else {
+          chart.select('x ')
+            .style("display", 'none')
+        }
+
+        if (layout.props.axisY == 1) {
+          chart.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+        } else if (layout.props.axisY == 0) {
+          chart.select('y')
+            .style("display", 'none')
+        }
+
+        $('.axis text').css({'fill':'#707070', 'font': '11px sans-serif'});
+        $('.axis path, .axis line').css({ 'fill': 'none','stroke':'#CCC', 'shape-rendering':'crispEdges'});
 
 
+        d3.select("#" + id).append('text')
+          .text(hc.qDimensionInfo[0].qFallbackTitle)
+          .attr('x', width/2 + margin.left)
+          .attr('y', height+margin.top+margin.bottom)
+          .attr("text-anchor", "middle")
+          .style('display', function() {
+            if ( layout.props.titleX == false )
+            return 'none';
+          })
 
-//Линии
+
+    //Линии
       if(lines.length > 0) {
 
       // for(var i = 0; i < lines.length; i++ ){
@@ -430,15 +491,15 @@ function ( qlik, d3, cssContent,  prop) {
 
 
 
-if ( layout.props.values ) {
-  var valLine = chart.selectAll(".values")
+    if ( layout.props.values ) {
+    var valLine = chart.selectAll(".values")
        .data(lines)
        .enter().append('g')
        .attr('class','values')
 
 
 
-  valLine.selectAll('.textg')
+    valLine.selectAll('.textg')
       .data(function(d) { return d; })
       .enter().append('g')
       .attr("transform", function(d) { return "translate(" + (x(d.x) + x.rangeBand()/2) +"," + (y(d.y)) +")"; })
@@ -456,11 +517,11 @@ if ( layout.props.values ) {
         if ( layout.props.lineFontWeight) return 'bold';
       })
       .style('fill', function(d) { return d.textColor; })
-}
+    }
 
 
 
-}
+    }
 
 
 
@@ -468,7 +529,7 @@ if ( layout.props.values ) {
 
 
 
-if (layout.props.legend) {
+    if (layout.props.legend) {
       legend = d3.select("#" + id + "legend")
             .style({margin:0, padding:0})
             .style("margin-left", margin.left + "px")
@@ -477,26 +538,33 @@ if (layout.props.legend) {
      var li = legend.selectAll('li')
      .data(allMeasures.slice())
      .enter().append("li")
-     .text(function(d) { return  d; })
+     .text(function(d, i) {
+    if(legendColors[i].meraLegend != undefined && legendColors[i].meraLegend != ""){
+      return  legendColors[i].meraLegend;
+    }
+    return d;
+    })
      .style("display", "inline-block")
      .style({margin:0, padding:0})
-     .style("margin-left","5px")
+     .style("margin-left","10px")
+     .style('padding-left', '5px')
      .style('border-left-style','solid')
-     .style("border-width", layout.props.lgOffset + "px")
+     .style("border-width",  "10px")
      .style('border-color', function(d,i) {
        return legendColors[i].color;
-     })
-    //  .style("color", function(d,i) {
-    //    return legendColors[i].textColor;
-    //  })
+      })
+      // .style("color", function(d,i) {
+      //   return legendColors[i].textColor;
+      // })
     .style("color", "black")
     .style('font-size', layout.props.lgFontSize + 'px')
-     .style("padding", "0.5%")
+    .style('line-height', function(d,i) {
+      if (hc.qMeasureInfo[i].line) return "3px";
+      else return "10px";
+    })
 
 
-
-
-      }
+    }
 
 
       var svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
@@ -509,7 +577,7 @@ if (layout.props.legend) {
       img.onload = function() {
           ctx.drawImage(img, 0, 0);
           var png = canvas.toDataURL("image/png");
-          document.querySelector('#png-container').innerHTML = '<img src="'+png+'"/>';
+          document.querySelector('#png-container' + id).innerHTML = '<img src="'+png+'"/>';
           DOMURL.revokeObjectURL(png);
       };
       img.src = url;
@@ -517,7 +585,8 @@ if (layout.props.legend) {
       return qlik.Promise.resolve();
 
 
-}
+
+    }
 
 
 
