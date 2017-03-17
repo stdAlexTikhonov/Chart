@@ -215,7 +215,7 @@ function ( qlik, d3, cssContent,  prop) {
 
 
       var y = d3.scale.linear()
-            .domain([ stackMinY < minY && layout.props.typeBar == "stacked"? stackMinY:minY, stackMaxY > maxY? stackMaxY:maxY])
+            .domain([ stackMinY < minY && layout.props.typeBar == "stacked"? stackMinY:minY, stackMaxY > maxY && layout.props.typeBar == "stacked"? stackMaxY:maxY])
             .range([height, 0]);
 
 
@@ -223,7 +223,6 @@ function ( qlik, d3, cssContent,  prop) {
           var valueline = d3.svg.line()
               .x(function(d) {  return x(d.x) + x.rangeBand()/2; })
               .y(function(d) {  return y(d.y) })
-
 
 
           var xAxis = d3.svg.axis()
@@ -445,8 +444,8 @@ function ( qlik, d3, cssContent,  prop) {
 
 
     //Линии
-      if(lines.length > 0) {
-
+      if(lines.length > 0 && !isNaN(lines[0][0].y)) {//lines[0].y - может быть undefined поэтому !undefined == true !!undefined == false
+        console.log();
       // for(var i = 0; i < lines.length; i++ ){
         var line = chart.selectAll('.line')
             .data(lines)
@@ -583,7 +582,6 @@ function ( qlik, d3, cssContent,  prop) {
       img.src = url;
 
       return qlik.Promise.resolve();
-
 
 
     }
