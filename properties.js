@@ -493,7 +493,7 @@ define( [], function () {
 			  },
 			  measures: {
 				uses: "measures",
-				min: 2,
+				min: 1,
 				max: 10,
 				items: {
 					color: color,
@@ -504,6 +504,24 @@ define( [], function () {
 						component: "switch",
 						label: "Преобразовать в линию",
 						ref: "qDef.line",
+						options: [
+							{
+								label: "On",
+								value: true
+							},
+							{
+								label: 'Off',
+								value: false
+							}
+
+						],
+						defaultValue: false
+					},
+					alternative: {
+						type: "boolean",
+						component: "switch",
+						label: "Альтернативная шкала",
+						ref: "qDef.alternative",
 						options: [
 							{
 								label: "On",

@@ -68,10 +68,17 @@ function ( qlik, d3, cssContent,  prop) {
       var bartitles = [];
       var legendColors = [];
 
+      var dataAlternative = [];
+      var alternative = [];//альтернативная шкала
+
 
       allMeasures.push(hc.qDimensionInfo[0].qFallbackTitle);
       for (var i = 0; i < hc.qMeasureInfo.length; i++) {
          allMeasures.push(hc.qMeasureInfo[i].qFallbackTitle)
+         //Альтернативная шкала
+         if (hc.qMeasureInfo[i].alternative) alternative.push(true);
+         else alternative.push(false);
+
          if (hc.qMeasureInfo[i].line) {
            shape.push(hc.qMeasureInfo[i].lineShape);
            causesLines.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor });
@@ -84,29 +91,34 @@ function ( qlik, d3, cssContent,  prop) {
       }
 
       var totals = [];
+      var totalsAlternative = [];
 
       for (var r = 0; r < hc.qDataPages[0].qMatrix.length; r++) {
-        // iterate over all cells within a row
+        // iterate over all cells within a column
             var arr = hc.qDataPages[0].qMatrix[r];
 
             total = 0;
             totalNegstive = 0;
-            row = {};
+            column = {};
             for (var c = 0; c < arr.length; c++) {
-              if ( c == 0 ) row[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qText;
+              if ( c == 0 ) column[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qText;
               else {
-                row[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qNum;
-                row[allMeasures[c] + '_f'] = hc.qDataPages[0].qMatrix[r][c].qText;
+                column[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qNum;
+                column[allMeasures[c] + '_f'] = hc.qDataPages[0].qMatrix[r][c].qText;
                 if (bartitles.indexOf(allMeasures[c]) > -1) {
-                  if (row[allMeasures[c]] < 0) {
-                    totalNegstive += row[allMeasures[c]];
-                  } else total += row[allMeasures[c]];
+                  if (column[allMeasures[c]] < 0) {
+                    totalNegstive += column[allMeasures[c]];
+                  } else total += column[allMeasures[c]];
                 }
               }
             }
-            data.push(row);
+
+
+            data.push(column);
             totals.push(totalNegstive);
             totals.push(total);
+
+
           }
 
 
@@ -126,6 +138,23 @@ function ( qlik, d3, cssContent,  prop) {
             }));
           }));
 
+
+          var maxYAlternative = d3.max(allMeasures.map(function(c){
+            return d3.max(dataAlternative.map(function(d) {
+              return d[c];
+            }));
+          }));
+
+          var minYAlternative = d3.min(allMeasures.map(function(c){
+            return d3.min(dataAlternative.map(function(d) {
+              return d[c];
+            }));
+          }));
+
+          console.log("maxYAlternative "+ maxYAlternative, "minYAlternative" + minYAlternative);
+          console.log("maxY "+ maxY, "minY" + minY);
+          console.log("data ", data);
+          console.log("dataAlternative ", dataAlternative)
 
           var stackMaxY = d3.max(totals);
 
@@ -164,7 +193,7 @@ function ( qlik, d3, cssContent,  prop) {
           }
 
 
-          var margin = {top: 20, right: 0, bottom: 17, left: 60};
+          var margin = {top: 20, right: 60, bottom: 17, left: 60};
 
 
 
@@ -180,8 +209,10 @@ function ( qlik, d3, cssContent,  prop) {
 
           if ( layout.props.axisY) {
             margin.left = 60;
+            margin.right = 60;
           } else {
             margin.left = 0;
+            margin.right = 0;
           }
 
           if ( layout.props.titleX ) {
@@ -232,6 +263,10 @@ function ( qlik, d3, cssContent,  prop) {
           var yAxis = d3.svg.axis()
             .scale(y)
             .orient("left");
+
+          var yAxis2 = d3.svg.axis()
+            .scale(y)
+            .orient("right");
 
 
 
@@ -423,6 +458,11 @@ function ( qlik, d3, cssContent,  prop) {
           chart.append("g")
             .attr("class", "y axis")
             .call(yAxis)
+
+          chart.append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(" + width + ",0)")
+            .call(yAxis2)
         } else if (layout.props.axisY == 0) {
           chart.select('y')
             .style("display", 'none')
