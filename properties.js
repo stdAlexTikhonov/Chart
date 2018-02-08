@@ -525,16 +525,16 @@ define([], function () {
 						ref: "qDef.textAlign",
 						options: [
 							{
-								label: "Up",
+								label: "Down",
 								value: -1
 							},
 							{
-								label: 'Down',
+								label: 'Up',
 								value: 1
 							}
 
 						],
-						defaultValue: -1
+						defaultValue: 1
 					},
 					shape: shape
 				}

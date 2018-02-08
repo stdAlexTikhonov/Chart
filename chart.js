@@ -103,11 +103,27 @@ define(["qlik", "d3", "text!./chart.css", './properties'
                 } else total += row[allMeasures[c]];
               }
             }
+            //если есть 2я линия
+            if (c == 2) {
+              let lastPoint;
+              if (r > 0) lastPoint = data[r - 1].diff;
+              if (row[allMeasures[1]] - row[allMeasures[2]] > 0) {
+                row['diff'] = -1;
+              } else if (row[allMeasures[1]] - row[allMeasures[2]] == 0) {
+                row['diff'] = lastPoint;
+              } else {
+                row['diff'] = 1;
+              }
+
+
+            }
           }
           data.push(row);
           totals.push(totalNegstive);
           totals.push(total);
         }
+
+        console.log(data);
 
 
         var dimension = allMeasures[0];
@@ -140,7 +156,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
         var lines = causesLines.map(function (c) {
           return data.map(function (d) {
-            return { x: d[dimension], y: d[c.title], formatted: d[c.title + '_f'], textColor: c.textColor, textAlign: c.textAlign };
+            return { x: d[dimension], y: d[c.title], formatted: d[c.title + '_f'], textColor: c.textColor, textAlign: c.textAlign * d['diff'] };
           });
         });
 
@@ -525,7 +541,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
               .attr('class', 'textg')
               .attr("text-anchor", layout.props.lineTextAlign)
               .attr("transform", "rotate(" + layout.props.lineValAngle + ")")
-              .attr('dy', function (d) { return layout.props.lineTextOffset * d.textAlign + (d.textAlign == 1 ? layout.props.lineFontSize : 0) })
+              .attr('dy', function (d, i) { return layout.props.lineTextOffset * d.textAlign + (d.textAlign == 1 ? layout.props.lineFontSize : 0) })
               // .attr('dy', -20)
               .text(function (k, i) {
                 return k.formatted;
