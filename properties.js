@@ -1,5 +1,5 @@
 // JavaScript
-define( [], function () {
+define([], function () {
 	'use strict';
 	var circles = {
 		ref: "props.circles",
@@ -17,24 +17,24 @@ define( [], function () {
 		defaultValue: false
 	};
 
-	 var values = {
-		 ref: "props.values",
-		 label: "Значения",
-		 type: "boolean",
-		 component: "switch",
+	var values = {
+		ref: "props.values",
+		label: "Значения",
+		type: "boolean",
+		component: "switch",
 
-		 options: [{
-			 value: true,
-			 label: "On"
-		 }, {
-			 value: false,
-			 label: "OFF"
-		 }],
-		 defaultValue: false
-	 };
+		options: [{
+			value: true,
+			label: "On"
+		}, {
+			value: false,
+			label: "OFF"
+		}],
+		defaultValue: false
+	};
 
 
-	 var barFontWeight = {
+	var barFontWeight = {
 		ref: "props.barFontWeight",
 		label: "Жирный шрифт",
 		type: "boolean",
@@ -48,59 +48,59 @@ define( [], function () {
 			label: "OFF"
 		}],
 		defaultValue: false
-	 };
+	};
 
-	 var lineFontWeight = {
-	 ref: "props.lineFontWeight",
-	 label: "Жирный шрифт",
-	 type: "boolean",
-	 component: "switch",
+	var lineFontWeight = {
+		ref: "props.lineFontWeight",
+		label: "Жирный шрифт",
+		type: "boolean",
+		component: "switch",
 
-	 options: [{
-		 value: true,
-		 label: "On"
-	 }, {
-		 value: false,
-		 label: "OFF"
-	 }],
-	 defaultValue: false
-	 };
+		options: [{
+			value: true,
+			label: "On"
+		}, {
+			value: false,
+			label: "OFF"
+		}],
+		defaultValue: false
+	};
 
 
-	 var barsValues = {
-		 ref: "props.barsValues",
-		 label: "Значения",
-		 type: "boolean",
-		 component: "switch",
+	var barsValues = {
+		ref: "props.barsValues",
+		label: "Значения",
+		type: "boolean",
+		component: "switch",
 
-		 options: [{
-			 value: true,
-			 label: "On"
-		 }, {
-			 value: false,
-			 label: "OFF"
-		 }],
-		 defaultValue: false
-	 };
+		options: [{
+			value: true,
+			label: "On"
+		}, {
+			value: false,
+			label: "OFF"
+		}],
+		defaultValue: false
+	};
 
-	 var lineValAngle =  {
-			 type: "integer",
-			 component: "slider",
-			 label: "Угол наклона значений",
-			 ref: "props.lineValAngle",
-			 min: -90,
-			 max: 90,
-			 step: 10
+	var lineValAngle = {
+		type: "integer",
+		component: "slider",
+		label: "Угол наклона значений",
+		ref: "props.lineValAngle",
+		min: -90,
+		max: 90,
+		step: 10
 	}
 
-	var barValAngle =  {
-			type: "integer",
-			component: "slider",
-			label: "Угол наклона значений",
-			ref: "props.barValAngle",
-			min: -90,
-			max: 90,
-			step: 90
+	var barValAngle = {
+		type: "integer",
+		component: "slider",
+		label: "Угол наклона значений",
+		ref: "props.barValAngle",
+		min: -90,
+		max: 90,
+		step: 90
 	}
 
 	var barValVerticalAlign = {
@@ -116,7 +116,7 @@ define( [], function () {
 			value: "middle",
 			label: "Middle"
 		}
-	],
+		],
 		defaultValue: "middle"
 	};
 
@@ -136,7 +136,7 @@ define( [], function () {
 			value: "right",
 			label: "Right"
 		}
-	],
+		],
 		defaultValue: "center"
 	};
 
@@ -156,7 +156,7 @@ define( [], function () {
 			value: "start",
 			label: "Right"
 		}
-	],
+		],
 		defaultValue: "middle"
 	};
 
@@ -177,50 +177,50 @@ define( [], function () {
 	};
 
 
-	 var lineTextOffset =  {
-			 type: "integer",
-			 component: "slider",
-			 label: "Отступ",
-			 ref: "props.lineTextOffset",
-			 min: 0,
-			 max: 20,
-			 step: 1,
-			 defaultValue: 0
+	var lineTextOffset = {
+		type: "integer",
+		component: "slider",
+		label: "Отступ",
+		ref: "props.lineTextOffset",
+		min: 0,
+		max: 20,
+		step: 1,
+		defaultValue: 0
 	}
 
 	var barTextOffset = {
-			type: "integer",
-			 component: "slider",
-			 label: "Отступ",
-			 ref: "props.barTextOffset",
-			 min: -25,
-			 max: 25,
-			 step: 1,
-			 defaultValue: 0
+		type: "integer",
+		component: "slider",
+		label: "Отступ",
+		ref: "props.barTextOffset",
+		min: -25,
+		max: 25,
+		step: 1,
+		defaultValue: 0
 	}
 
 
-	 var radius =  {
-			 type: "integer",
-			 component: "slider",
-			 label: "Радиус",
-			 ref: "props.radius",
-			 min: 1,
-			 max: 15,
-			 step: 1
+	var radius = {
+		type: "integer",
+		component: "slider",
+		label: "Радиус",
+		ref: "props.radius",
+		min: 1,
+		max: 15,
+		step: 1
 	}
 
 
 
-	var dashed =  {
-			type: "integer",
-			component: "slider",
-			label: "Длина пунктира",
-			ref: "props.dashed",
-			min: 0,
-			max: 10,
-			step: 1,
-			defaultValue: 0
+	var dashed = {
+		type: "integer",
+		component: "slider",
+		label: "Длина пунктира",
+		ref: "props.dashed",
+		min: 0,
+		max: 10,
+		step: 1,
+		defaultValue: 0
 	}
 
 
@@ -254,48 +254,48 @@ define( [], function () {
 	};
 
 
-	var lgFontSize =  {
-			type: "integer",
-			component: "slider",
-			label: "Размер шрифта",
-			ref: "props.lgFontSize",
-			min: 9,
-			max: 20,
-			step: 1,
-			defaultValue: 9
+	var lgFontSize = {
+		type: "integer",
+		component: "slider",
+		label: "Размер шрифта",
+		ref: "props.lgFontSize",
+		min: 9,
+		max: 20,
+		step: 1,
+		defaultValue: 9
 	}
 
-	var lineFontSize =  {
-			type: "integer",
-			component: "slider",
-			label: "Размер шрифта",
-			ref: "props.lineFontSize",
-			min: 9,
-			max: 20,
-			step: 1,
-			defaultValue: 9
+	var lineFontSize = {
+		type: "integer",
+		component: "slider",
+		label: "Размер шрифта",
+		ref: "props.lineFontSize",
+		min: 9,
+		max: 20,
+		step: 1,
+		defaultValue: 9
 	}
 
-	var barFontSize =  {
-			type: "integer",
-			component: "slider",
-			label: "Размер шрифта",
-			ref: "props.barFontSize",
-			min: 9,
-			max: 20,
-			step: 1,
-			defaultValue: 9
+	var barFontSize = {
+		type: "integer",
+		component: "slider",
+		label: "Размер шрифта",
+		ref: "props.barFontSize",
+		min: 9,
+		max: 20,
+		step: 1,
+		defaultValue: 9
 	}
 
-	var lineWidth =  {
-			type: "integer",
-			component: "slider",
-			label: "Толщина линии",
-			ref: "props.lineWidth",
-			min: 1,
-			max: 10,
-			step: 1,
-			defaultValue: 1
+	var lineWidth = {
+		type: "integer",
+		component: "slider",
+		label: "Толщина линии",
+		ref: "props.lineWidth",
+		min: 1,
+		max: 10,
+		step: 1,
+		defaultValue: 1
 	}
 
 	var myTextBox = {
@@ -390,38 +390,38 @@ define( [], function () {
 
 
 	var colorPicker = {
-			label:"Градиент От",
-			component: "color-picker",
-			ref: "props.myColor",
-			type: "integer",
-			defaultValue: 0
+		label: "Градиент От",
+		component: "color-picker",
+		ref: "props.myColor",
+		type: "integer",
+		defaultValue: 0
 	};
 
 
 	var colorPicker2 = {
-			label:"Градиент До",
-			component: "color-picker",
-			ref: "props.myColor2",
-			type: "integer",
-			defaultValue: 0
+		label: "Градиент До",
+		component: "color-picker",
+		ref: "props.myColor2",
+		type: "integer",
+		defaultValue: 0
 	};
 
 
 
 	var textColor = {
-			label:"Цвет текста",
-			ref: "qDef.textColor",
-			type: "string",
-			defaultValue: 'black',
-			expression: "always"
+		label: "Цвет текста",
+		ref: "qDef.textColor",
+		type: "string",
+		defaultValue: 'black',
+		expression: "always"
 	};
 
 	var meraLegend = {
-			label:"Наименование метки",
-			ref: "qDef.meraLegend",
-			type: "string",
-			defaultValue: '',
-			expression: "always"
+		label: "Наименование метки",
+		ref: "qDef.meraLegend",
+		type: "string",
+		defaultValue: '',
+		expression: "always"
 	};
 
 
@@ -429,54 +429,54 @@ define( [], function () {
 		uses: "settings",
 		items: {
 			// Definition of the custom section header
-					legend: {
-						type: "items",
-						label: "Легенда",
-						items: {
-							legend: legend,
-							lgFontSize: lgFontSize,
-							lgOffset: lgOffset
-						}
-					},
-					bars: {
-						type: "items",
-						label: "Столбцы",
-						items: {
-							barsType: type,
-							barsValues: barsValues,
-							barTextOffset: barTextOffset,
-							//barValHorizontalAlign: barValHorizontalAlign,
-							barValVerticalAlign: barValVerticalAlign,
-							angle: barValAngle,
-							barFontSize: barFontSize,
-							fontWeight: barFontWeight
-						}
-					},
-					lines: {
-						type: "items",
-						label: "Линии",
-						items: {
-							width: lineWidth,
-							dashed: dashed,
-							circles: circles,
-							fillPoints: fillPoints,
-							radius: radius,
-							values: values,
-							lineTextAlign: lineTextAlign,
-							lineTextOffset: lineTextOffset,
-							angle: lineValAngle,
-							lineFontSize: lineFontSize,
-							fontWeight: lineFontWeight
-						}
-					},
+			legend: {
+				type: "items",
+				label: "Легенда",
+				items: {
+					legend: legend,
+					lgFontSize: lgFontSize,
+					lgOffset: lgOffset
+				}
+			},
+			bars: {
+				type: "items",
+				label: "Столбцы",
+				items: {
+					barsType: type,
+					barsValues: barsValues,
+					barTextOffset: barTextOffset,
+					//barValHorizontalAlign: barValHorizontalAlign,
+					barValVerticalAlign: barValVerticalAlign,
+					angle: barValAngle,
+					barFontSize: barFontSize,
+					fontWeight: barFontWeight
+				}
+			},
+			lines: {
+				type: "items",
+				label: "Линии",
+				items: {
+					width: lineWidth,
+					dashed: dashed,
+					circles: circles,
+					fillPoints: fillPoints,
+					radius: radius,
+					values: values,
+					lineTextAlign: lineTextAlign,
+					lineTextOffset: lineTextOffset,
+					angle: lineValAngle,
+					lineFontSize: lineFontSize,
+					fontWeight: lineFontWeight
+				}
+			},
 			myNewHeader: {
 				type: "items",
 				label: "Оси",
 				items: {
 					myTextBox: myTextBox,
-									myTextBox2: myTextBox2,
-									titleX: titleX
-									// titleY: titleY
+					myTextBox2: myTextBox2,
+					titleX: titleX
+					// titleY: titleY
 
 				}
 			}
@@ -484,14 +484,15 @@ define( [], function () {
 		}
 	}
 
+
 	return {
-			type: "items",
-			component: "accordion",
-			items: {
-			  dimensions: {
+		type: "items",
+		component: "accordion",
+		items: {
+			dimensions: {
 				uses: "dimensions"
-			  },
-			  measures: {
+			},
+			measures: {
 				uses: "measures",
 				min: 1,
 				max: 10,
@@ -517,31 +518,39 @@ define( [], function () {
 						],
 						defaultValue: false
 					},
-					alternative: {
-						type: "boolean",
+					textAlign: {
+						type: "integer",
 						component: "switch",
-						label: "Альтернативная шкала",
-						ref: "qDef.alternative",
+						label: "Text align",
+						ref: "qDef.textAlign",
 						options: [
 							{
-								label: "On",
-								value: true
+								label: "Up",
+								value: -1
 							},
 							{
-								label: 'Off',
-								value: false
+								label: 'Down',
+								value: 1
 							}
 
 						],
-						defaultValue: false
+						defaultValue: -1
 					},
 					shape: shape
 				}
-			  },
-			  sorting: {
+			},
+			sorting: {
 				uses: "sorting"
-			  },
-			  appearance: appearanceSection
+			},
+			appearance: appearanceSection,
+			addons: {
+				uses: "addons",
+				items: {
+					dataHandling: {
+						uses: "dataHandling"
+					}
+				}
 			}
-		 };
- });
+		}
+	};
+});
