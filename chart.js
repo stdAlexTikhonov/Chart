@@ -74,7 +74,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
           allMeasures.push(hc.qMeasureInfo[i].qFallbackTitle)
           if (hc.qMeasureInfo[i].line) {
             shape.push(hc.qMeasureInfo[i].lineShape);
-            causesLines.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, textAlign: hc.qMeasureInfo[i].textAlign });
+            causesLines.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, textAlign: hc.qMeasureInfo[i].textAlign, lineWidth: hc.qMeasureInfo[i].lineWidth, dashed: hc.qMeasureInfo[i].dashed });
           } else {
             causesBars.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, textAlign: hc.qMeasureInfo[i].textAlign });
             bartitles.push(hc.qMeasureInfo[i].qFallbackTitle);
@@ -455,8 +455,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
             });
           });
 
-          // console.log(lines);
-          // for(var i = 0; i < lines.length; i++ ){
+
           var line = chart.selectAll('.line')
             .data(lines)
             .enter().append("path")
@@ -465,12 +464,18 @@ define(["qlik", "d3", "text!./chart.css", './properties'
             .attr('stroke', function (d, i) {
               return causesLines[i].color;
             })
-            .attr('stroke-width', layout.props.lineWidth)
+            .attr('stroke-width', function (d, i) {
+              console.log(causesLines[i].lineWidth);
+              return causesLines[i].lineWidth;
+            })
             .attr("d", function (d, i) {
               valueline.interpolate(shape[i]);
               return valueline(d);
             })
-            .style("stroke-dasharray", layout.props.dashed);
+            .style("stroke-dasharray", function (d, i) {
+              console.log(causesLines[i].dashed);
+              return causesLines[i].dashed;
+            });
 
 
 

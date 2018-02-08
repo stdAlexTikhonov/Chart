@@ -216,7 +216,7 @@ define([], function () {
 		type: "integer",
 		component: "slider",
 		label: "Длина пунктира",
-		ref: "props.dashed",
+		ref: "qDef.dashed",
 		min: 0,
 		max: 10,
 		step: 1,
@@ -291,7 +291,7 @@ define([], function () {
 		type: "integer",
 		component: "slider",
 		label: "Толщина линии",
-		ref: "props.lineWidth",
+		ref: "qDef.lineWidth",
 		min: 1,
 		max: 10,
 		step: 1,
@@ -456,8 +456,6 @@ define([], function () {
 				type: "items",
 				label: "Линии",
 				items: {
-					width: lineWidth,
-					dashed: dashed,
 					circles: circles,
 					fillPoints: fillPoints,
 					radius: radius,
@@ -518,6 +516,8 @@ define([], function () {
 						],
 						defaultValue: false
 					},
+					lineWidth: lineWidth,
+					dashed: dashed,
 					textAlign: {
 						type: "integer",
 						component: "switch",
