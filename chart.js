@@ -559,8 +559,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
               .attr("transform", "rotate(" + layout.props.lineValAngle + ")")
               .attr('dy', function (d, i) { return -layout.props.lineTextOffset * d.textAlign * d.lineIndex })
               .text(function (k, i) {
-                let int = parseInt(k.formatted);
-                return int ? int : k.formatted;
+                return k.formatted;
               })
               .style('font-size', layout.props.lineFontSize)
               .style('font-weight', function (d) {
