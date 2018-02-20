@@ -518,24 +518,6 @@ define([], function () {
 					},
 					lineWidth: lineWidth,
 					dashed: dashed,
-					textAlign: {
-						type: "integer",
-						component: "switch",
-						label: "Text align",
-						ref: "qDef.textAlign",
-						options: [
-							{
-								label: "Down",
-								value: -1
-							},
-							{
-								label: 'Up',
-								value: 1
-							}
-
-						],
-						defaultValue: 1
-					},
 					shape: shape
 				}
 			},

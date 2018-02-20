@@ -55,9 +55,6 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
         $element.empty();
         $element.append("<svg class='chart' id='" + id + "'></svg><ul id='" + id + "legend'></ul>");
-
-
-
         //Подготовка данных
 
         var causesLines = [];
@@ -74,12 +71,12 @@ define(["qlik", "d3", "text!./chart.css", './properties'
           allMeasures.push(hc.qMeasureInfo[i].qFallbackTitle)
           if (hc.qMeasureInfo[i].line) {
             shape.push(hc.qMeasureInfo[i].lineShape);
-            causesLines.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, textAlign: hc.qMeasureInfo[i].textAlign, lineWidth: hc.qMeasureInfo[i].lineWidth, dashed: hc.qMeasureInfo[i].dashed });
+            causesLines.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, lineWidth: hc.qMeasureInfo[i].lineWidth, dashed: hc.qMeasureInfo[i].dashed });
           } else {
-            causesBars.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, textAlign: hc.qMeasureInfo[i].textAlign });
+            causesBars.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor });
             bartitles.push(hc.qMeasureInfo[i].qFallbackTitle);
           }
-          legendColors.push({ color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, meraLegend: hc.qMeasureInfo[i].meraLegend, textAlign: hc.qMeasureInfo[i].textAlign });
+          legendColors.push({ color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, meraLegend: hc.qMeasureInfo[i].meraLegend });
 
         }
 
@@ -103,6 +100,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
                 } else total += row[allMeasures[c]];
               }
             }
+
             //если есть 2я линия
             if (c == 2) {
               let lastPoint;
@@ -115,15 +113,13 @@ define(["qlik", "d3", "text!./chart.css", './properties'
                 row['diff'] = 1;
               }
 
-
             }
+
           }
           data.push(row);
           totals.push(totalNegstive);
           totals.push(total);
         }
-
-        console.log(data);
 
 
         var dimension = allMeasures[0];
@@ -154,9 +150,9 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         stackMinY = stackMinY > 0 ? 0 : stackMinY;
 
 
-        var lines = causesLines.map(function (c) {
+        var lines = causesLines.map(function (c, line_i) {
           return data.map(function (d) {
-            return { x: d[dimension], y: d[c.title], formatted: d[c.title + '_f'], textColor: c.textColor, textAlign: c.textAlign * d['diff'] };
+            return { x: d[dimension], y: d[c.title], formatted: d[c.title + '_f'], textColor: c.textColor, textAlign: d['diff'], lineIndex: line_i == 0 ? -1 : 1 };
           });
         });
 
@@ -208,17 +204,17 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         }
 
 
+        d3.select("#" + id).style("width", "98%")
         var w = parseInt(d3.select("#" + id).style("width"));
-        var width = w - margin.left - margin.right;
-
-        if (layout.props.legend) d3.select("#" + id).style('height', "90%");
-        else d3.select("#" + id).style('height', "100%");
+        //var width = w - margin.left - margin.right;
+        var width = w;
+        if (layout.props.legend) d3.select("#" + id).style('height', "80%");
+        else d3.select("#" + id).style('height', "98%");
 
         var h = parseInt(d3.select("#" + id).style("height"));
-        var height = h - margin.top - margin.bottom;
+        //var height = h - margin.top - margin.bottom;
+        var height = h;
 
-        $element.append("<canvas id='canvas' width='" + w + "' height='" + h + "'></canvas>");
-        $element.append("<div id='png-container" + id + "'></div>");
 
         var x = d3.scale.ordinal()
           .domain(data.map(function (d) { return d[dimension]; }))
@@ -232,8 +228,8 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
 
         var y = d3.scale.linear()
-          .domain([minY - minY * 0.2, maxY + maxY * 0.2])
-          .range([height, 0]);
+          .domain([minY, maxY])
+          .range([height - 10 - layout.props.lineTextOffset, 10 + layout.props.lineTextOffset]);
 
 
 
@@ -253,14 +249,17 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
 
         //выводим картинку
+        // var chart = d3.select("#" + id)
+        //   .attr("width", width + margin.left + margin.right)
+        //   .attr("height", height + margin.top + margin.bottom)
+        //   .append("g")
+        //   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
         var chart = d3.select("#" + id)
-          .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.top + margin.bottom)
+          .attr("width", width)
+          .attr("height", height)
           .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-
-
+          .attr("transform", "translate(0,0)");
 
         //Столбцы
         if (layout.props.typeBar == "stacked") {
@@ -426,28 +425,28 @@ define(["qlik", "d3", "text!./chart.css", './properties'
           }
         }
 
-        //Оси
-        if (layout.props.axisX == 1) {
-          chart.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .call(xAxis)
-        } else {
-          chart.select('x ')
-            .style("display", 'none')
-        }
+        // //Оси
+        // if (layout.props.axisX == 1) {
+        //   chart.append("g")
+        //     .attr("class", "x axis")
+        //     .attr("transform", "translate(0," + height + ")")
+        //     .call(xAxis)
+        // } else {
+        //   chart.select('x ')
+        //     .style("display", 'none')
+        // }
 
-        if (layout.props.axisY == 1) {
-          chart.append("g")
-            .attr("class", "y axis")
-            .call(yAxis)
-        } else if (layout.props.axisY == 0) {
-          chart.select('y')
-            .style("display", 'none')
-        }
+        // if (layout.props.axisY == 1) {
+        //   chart.append("g")
+        //     .attr("class", "y axis")
+        //     .call(yAxis)
+        // } else if (layout.props.axisY == 0) {
+        //   chart.select('y')
+        //     .style("display", 'none')
+        // }
 
-        $('.axis text').css({ 'fill': '#707070', 'font': '11px sans-serif' });
-        $('.axis path, .axis line').css({ 'fill': 'none', 'stroke': '#CCC', 'shape-rendering': 'crispEdges' });
+        // $('.axis text').css({ 'fill': '#707070', 'font': '11px sans-serif' });
+        // $('.axis path, .axis line').css({ 'fill': 'none', 'stroke': '#CCC', 'shape-rendering': 'crispEdges' });
 
 
         d3.select("#" + id).append('text')
@@ -481,7 +480,6 @@ define(["qlik", "d3", "text!./chart.css", './properties'
               return causesLines[i].color;
             })
             .attr('stroke-width', function (d, i) {
-              console.log(causesLines[i].lineWidth);
               return causesLines[i].lineWidth;
             })
             .attr("d", function (d, i) {
@@ -489,7 +487,6 @@ define(["qlik", "d3", "text!./chart.css", './properties'
               return valueline(d);
             })
             .style("stroke-dasharray", function (d, i) {
-              console.log(causesLines[i].dashed);
               return causesLines[i].dashed;
             });
 
@@ -522,45 +519,61 @@ define(["qlik", "d3", "text!./chart.css", './properties'
               .attr('stroke-width', layout.props.lineWidth)
           }
 
-          console.log(lines);
-
 
           if (layout.props.values) {
+
+
+
             var valLine = chart.selectAll(".values")
               .data(lines)
               .enter().append('g')
               .attr('class', 'values')
 
+            let ys;
 
 
             valLine.selectAll('.textg')
-              .data(function (d) { return d; })
+              .data(function (d) {
+                ys = d;
+                return d;
+              })
               .enter().append('g')
-              .attr("transform", function (d) { return "translate(" + (x(d.x) + x.rangeBand() / 2) + "," + (y(d.y)) + ")"; })
+              .attr("transform", function (d, i) {
+                let current_x = x(d.x) + x.rangeBand() / 2,
+                  current_y = y(d.y) + layout.props.lineFontSize / 2,
+                  prev_y = i > 0 ? y(ys[i - 1].y) : 0;
+                // console.log('current: ', current_x, current_x - d.formatted.length * layout.props.lineFontSize / 4);
+                // if (i > 0) {
+                //   let prev = ys[i - 1],
+                //     prev_x = x(ys[i - 1].x) + x.rangeBand() / 2;
+                //   console.log('prev: ', prev_x, prev_x + prev.formatted.length * layout.props.lineFontSize / 4);
+
+                // }
+                // console.log(y(d.y), prev_y);
+                return `translate(${current_x},${current_y})`;
+              })
+              .attr('class', 'textalign')
               .append('text')
               .attr('class', 'textg')
               .attr("text-anchor", layout.props.lineTextAlign)
               .attr("transform", "rotate(" + layout.props.lineValAngle + ")")
-              .attr('dy', function (d, i) { return layout.props.lineTextOffset * d.textAlign + (d.textAlign == 1 ? layout.props.lineFontSize : 0) })
-              // .attr('dy', -20)
+              .attr('dy', function (d, i) { return -layout.props.lineTextOffset * d.textAlign * d.lineIndex })
               .text(function (k, i) {
-                return k.formatted;
+                let int = parseInt(k.formatted);
+                return int ? int : k.formatted;
               })
               .style('font-size', layout.props.lineFontSize)
               .style('font-weight', function (d) {
                 if (layout.props.lineFontWeight) return 'bold';
               })
               .style('fill', function (d) { return d.textColor; })
+
           }
 
+          console.log(d3.selectAll(`#${id} .textalign`));
 
 
         }
-
-
-
-
-
 
 
         if (layout.props.legend) {
@@ -587,9 +600,6 @@ define(["qlik", "d3", "text!./chart.css", './properties'
             .style('border-color', function (d, i) {
               return legendColors[i].color;
             })
-            // .style("color", function(d,i) {
-            //   return legendColors[i].textColor;
-            // })
             .style("color", "black")
             .style('font-size', layout.props.lgFontSize + 'px')
             .style('line-height', function (d, i) {
