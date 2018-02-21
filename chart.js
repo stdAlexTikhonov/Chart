@@ -54,6 +54,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         var id = '_' + layout.qInfo.qId;
 
         $element.empty();
+        if (layout.props.legend && layout.props.showTable) $element.append(`<ul id='${id}legend'></ul>`);
         $element.append("<svg class='chart' id='" + id + "'></svg><div class='" + id + "table'></div");
 
 
@@ -218,7 +219,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         var height = h;
 
         if (layout.props.showTable) {
-          height -= 25;
+          height -= (30 + layout.props.lineFontSize);
           d3.select("#" + id).style('height', `${height}px`);
         }
 
@@ -241,7 +242,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
         var y = d3.scale.linear()
           .domain([minY, maxY])
-          .range([height - 10 - layout.props.lineTextOffset, 10 + layout.props.lineTextOffset]);
+          .range([height - 10 - (layout.props.axisX == 1 ? 20 : 0) - layout.props.lineTextOffset, 10 + layout.props.lineTextOffset]);
 
 
 
@@ -438,15 +439,16 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         }
 
         // //Оси
-        // if (layout.props.axisX == 1) {
-        //   chart.append("g")
-        //     .attr("class", "x axis")
-        //     .attr("transform", "translate(0," + height + ")")
-        //     .call(xAxis)
-        // } else {
-        //   chart.select('x ')
-        //     .style("display", 'none')
-        // }
+        if (layout.props.axisX == 1) {
+
+          chart.append("g")
+            .attr("class", "x axis")
+            .attr("transform", `translate(0,${height - 20})`)
+            .call(xAxis)
+        } else {
+          chart.select('x ')
+            .style("display", 'none')
+        }
 
         // if (layout.props.axisY == 1) {
         //   chart.append("g")
@@ -457,8 +459,8 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         //     .style("display", 'none')
         // }
 
-        // $('.axis text').css({ 'fill': '#707070', 'font': '11px sans-serif' });
-        // $('.axis path, .axis line').css({ 'fill': 'none', 'stroke': '#CCC', 'shape-rendering': 'crispEdges' });
+        $('.axis text').css({ 'fill': '#707070', 'font': '11px sans-serif' });
+        $('.axis path, .axis line').css({ 'fill': 'none', 'stroke': '#CCC', 'shape-rendering': 'crispEdges' });
 
 
         d3.select("#" + id).append('text')
@@ -582,12 +584,12 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
         }
 
-
+        if (layout.props.legend && !layout.props.showTable) $element.append(`<ul id='${id}legend'></ul>`);
         if (layout.props.legend) {
-          $element.append(`<ul id='${id}legend'></ul>`);
+
 
           legend = d3.select("#" + id + "legend")
-            .style({ margin: 0, padding: 0 })
+            .style({ margin: 0, padding: 0, position: layout.props.showTable ? 'absolute' : 'relative', right: 0 })
             .style("margin", "3px 10px")
 
 
@@ -618,13 +620,15 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
 
         }
-
+        console.log(lines);
         let table = `<table style='
-        text-align: center;'>`;
+        text-align: center;
+        font-size: ${layout.props.lineFontSize}px; 
+        font-weight: ${layout.props.lineFontWeight ? 'bold' : 'normal'};'>`;
         for (let i = 0; i < lines.length; i++) {
           table += `<tr>`;
           lines[i].forEach(d => {
-            table += `<td style="color: ${d.textColor}">${d.y}</td>`
+            table += `<td style="color: ${d.textColor};">${d.formatted}</td>`
           });
           table += `</tr>`;
         }
