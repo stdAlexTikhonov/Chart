@@ -54,7 +54,9 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         var id = '_' + layout.qInfo.qId;
 
         $element.empty();
-        $element.append("<svg class='chart' id='" + id + "'></svg><ul id='" + id + "legend'></ul>");
+        $element.append("<svg class='chart' id='" + id + "'></svg><div class='" + id + "table'></div");
+
+
         //Подготовка данных
 
         var causesLines = [];
@@ -208,12 +210,22 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         var w = parseInt(d3.select("#" + id).style("width"));
         //var width = w - margin.left - margin.right;
         var width = w;
-        if (layout.props.legend) d3.select("#" + id).style('height', "80%");
-        else d3.select("#" + id).style('height', "98%");
+
+        d3.select("#" + id).style('height', "98%");
 
         var h = parseInt(d3.select("#" + id).style("height"));
         //var height = h - margin.top - margin.bottom;
         var height = h;
+
+        if (layout.props.showTable) {
+          height -= 25;
+          d3.select("#" + id).style('height', `${height}px`);
+        }
+
+        if (layout.props.legend) {
+          height -= 25;
+          d3.select("#" + id).style('height', `${height}px`);
+        }
 
 
         var x = d3.scale.ordinal()
@@ -523,7 +535,6 @@ define(["qlik", "d3", "text!./chart.css", './properties'
           if (layout.props.values) {
 
 
-
             var valLine = chart.selectAll(".values")
               .data(lines)
               .enter().append('g')
@@ -569,16 +580,15 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
           }
 
-          console.log(d3.selectAll(`#${id} .textalign`));
-
-
         }
 
 
         if (layout.props.legend) {
+          $element.append(`<ul id='${id}legend'></ul>`);
+
           legend = d3.select("#" + id + "legend")
             .style({ margin: 0, padding: 0 })
-            .style("margin-left", margin.left + "px")
+            .style("margin", "3px 10px")
 
 
           var li = legend.selectAll('li')
@@ -608,6 +618,20 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
 
         }
+
+        let table = `<table style='
+        text-align: center;'>`;
+        for (let i = 0; i < lines.length; i++) {
+          table += `<tr>`;
+          lines[i].forEach(d => {
+            table += `<td style="color: ${d.textColor}">${d.y}</td>`
+          });
+          table += `</tr>`;
+        }
+
+        table += `</table>`;
+
+        if (layout.props.showTable) $element.append(table);
 
 
         //   var svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));

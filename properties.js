@@ -66,6 +66,22 @@ define([], function () {
 		defaultValue: false
 	};
 
+	var showTable = {
+		ref: "props.showTable",
+		label: "Показать табличку",
+		type: "boolean",
+		component: "switch",
+
+		options: [{
+			value: true,
+			label: "On"
+		}, {
+			value: false,
+			label: "OFF"
+		}],
+		defaultValue: false
+	};
+
 
 	var barsValues = {
 		ref: "props.barsValues",
@@ -407,7 +423,6 @@ define([], function () {
 	};
 
 
-
 	var textColor = {
 		label: "Цвет текста",
 		ref: "qDef.textColor",
@@ -445,7 +460,6 @@ define([], function () {
 					barsType: type,
 					barsValues: barsValues,
 					barTextOffset: barTextOffset,
-					//barValHorizontalAlign: barValHorizontalAlign,
 					barValVerticalAlign: barValVerticalAlign,
 					angle: barValAngle,
 					barFontSize: barFontSize,
@@ -464,7 +478,8 @@ define([], function () {
 					lineTextOffset: lineTextOffset,
 					angle: lineValAngle,
 					lineFontSize: lineFontSize,
-					fontWeight: lineFontWeight
+					fontWeight: lineFontWeight,
+					showTable: showTable
 				}
 			},
 			myNewHeader: {
@@ -474,7 +489,6 @@ define([], function () {
 					myTextBox: myTextBox,
 					myTextBox2: myTextBox2,
 					titleX: titleX
-					// titleY: titleY
 
 				}
 			}
