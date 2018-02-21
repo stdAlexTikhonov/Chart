@@ -207,7 +207,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         }
 
 
-        d3.select("#" + id).style("width", "98%")
+        d3.select("#" + id).style("width", "100%")
         var w = parseInt(d3.select("#" + id).style("width"));
         //var width = w - margin.left - margin.right;
         var width = w;
@@ -589,7 +589,8 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
 
           legend = d3.select("#" + id + "legend")
-            .style({ margin: 0, padding: 0, position: layout.props.showTable ? 'absolute' : 'relative', right: 0 })
+            .style({ margin: 0, padding: 0, width: '100%' })
+            .style('text-align', layout.props.showTable ? 'center' : 'left')
             .style("margin", "3px 10px")
 
 
@@ -628,7 +629,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         for (let i = 0; i < lines.length; i++) {
           table += `<tr>`;
           lines[i].forEach(d => {
-            table += `<td style="color: ${d.textColor};">${d.formatted}</td>`
+            table += `<td style="color: ${d.textColor}; width: ${width / lines[i].length}px">${d.formatted}</td>`
           });
           table += `</tr>`;
         }
