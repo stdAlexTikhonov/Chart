@@ -66,9 +66,57 @@ define([], function () {
 		defaultValue: false
 	};
 
+	var axisFontWeight = {
+		ref: "props.axisFontWeight",
+		label: "Жирный шрифт",
+		type: "boolean",
+		component: "switch",
+
+		options: [{
+			value: true,
+			label: "On"
+		}, {
+			value: false,
+			label: "OFF"
+		}],
+		defaultValue: false
+	};
+
+	var lgFontWeight = {
+		ref: "props.lgFontWeight",
+		label: "Жирный шрифт",
+		type: "boolean",
+		component: "switch",
+
+		options: [{
+			value: true,
+			label: "On"
+		}, {
+			value: false,
+			label: "OFF"
+		}],
+		defaultValue: false
+	};
+
 	var showTable = {
 		ref: "props.showTable",
 		label: "Показать табличку",
+		type: "boolean",
+		component: "switch",
+
+		options: [{
+			value: true,
+			label: "On"
+		}, {
+			value: false,
+			label: "OFF"
+		}],
+		defaultValue: false
+	};
+
+	var tableHeader = {
+		ref: "props.tableHeader",
+		label: "Заголовок",
 		type: "boolean",
 		component: "switch",
 
@@ -292,6 +340,17 @@ define([], function () {
 		defaultValue: 9
 	}
 
+	var axisFontSize = {
+		type: "integer",
+		component: "slider",
+		label: "Размер шрифта",
+		ref: "props.axisFontSize",
+		min: 9,
+		max: 20,
+		step: 1,
+		defaultValue: 9
+	}
+
 	var barFontSize = {
 		type: "integer",
 		component: "slider",
@@ -450,7 +509,8 @@ define([], function () {
 				items: {
 					legend: legend,
 					lgFontSize: lgFontSize,
-					lgOffset: lgOffset
+					lgOffset: lgOffset,
+					lgFontWeight: lgFontWeight
 				}
 			},
 			bars: {
@@ -479,7 +539,8 @@ define([], function () {
 					angle: lineValAngle,
 					lineFontSize: lineFontSize,
 					fontWeight: lineFontWeight,
-					showTable: showTable
+					showTable: showTable,
+					tableHeader: tableHeader
 				}
 			},
 			myNewHeader: {
@@ -488,8 +549,9 @@ define([], function () {
 				items: {
 					myTextBox: myTextBox,
 					myTextBox2: myTextBox2,
-					titleX: titleX
-
+					titleX: titleX,
+					axisFontSize: axisFontSize,
+					axisFontWeight: axisFontWeight
 				}
 			}
 

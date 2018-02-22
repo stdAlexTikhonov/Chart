@@ -128,7 +128,6 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         var dimension = allMeasures[0];
         allMeasures = allMeasures.slice(1);
 
-
         var maxY = d3.max(allMeasures.map(function (c) {
           return d3.max(data.map(function (d) {
             return d[c];
@@ -219,7 +218,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         var height = h;
 
         if (layout.props.showTable) {
-          height -= (50 + layout.props.lineFontSize);
+          height -= ((layout.props.tableHeader ? 50 : 30) + layout.props.lineFontSize);
           d3.select("#" + id).style('height', `${height}px`);
         }
 
@@ -242,7 +241,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
         var y = d3.scale.linear()
           .domain([minY, maxY])
-          .range([height - 10 - (layout.props.axisX == 1 ? 20 : 0) - layout.props.lineTextOffset, 10 + layout.props.lineTextOffset]);
+          .range([height - 10 - (layout.props.axisX == 1 ? (20 + layout.props.axisFontSize / 2) : 0) - layout.props.lineTextOffset, 10 + layout.props.lineTextOffset]);
 
 
 
@@ -443,7 +442,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
           chart.append("g")
             .attr("class", "x axis")
-            .attr("transform", `translate(0,${height - 20})`)
+            .attr("transform", `translate(0,${height - (15 + layout.props.axisFontSize / 2)})`)
             .call(xAxis)
         } else {
           chart.select('x ')
@@ -459,7 +458,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         //     .style("display", 'none')
         // }
 
-        $('.axis text').css({ 'fill': '#707070', 'font': '11px sans-serif' });
+        $('.axis text').css({ 'fill': '#707070', 'font': `${layout.props.axisFontSize}px sans-serif`, 'font-weight': layout.props.axisFontWeight ? 'bold' : 'normal' });
         $('.axis path, .axis line').css({ 'fill': 'none', 'stroke': '#CCC', 'shape-rendering': 'crispEdges' });
 
 
@@ -614,6 +613,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
             })
             .style("color", "black")
             .style('font-size', layout.props.lgFontSize + 'px')
+            .style('font-weight', layout.props.lgFontWeight ? 'bold' : 'normal')
             .style('line-height', function (d, i) {
               if (hc.qMeasureInfo[i].line) return "3px";
               else return "10px";
@@ -624,12 +624,12 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         console.log(lines);
         let table = `<table style='
         margin: 0 auto;
-        width: 100%;
+        width: 98%;
         text-align: center;
         font-size: ${layout.props.lineFontSize}px; 
         font-weight: ${layout.props.lineFontWeight ? 'bold' : 'normal'};'>`;
         for (let i = 0; i < lines.length; i++) {
-          if (i === 0) {
+          if (i === 0 && layout.props.tableHeader) {
             table += `<tr>`;
             lines[i].forEach(d => {
               table += `<td style="color: black; width: ${width / lines[i].length}px;">${d.x}</td>`
