@@ -219,7 +219,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         var height = h;
 
         if (layout.props.showTable) {
-          height -= (30 + layout.props.lineFontSize);
+          height -= (50 + layout.props.lineFontSize);
           d3.select("#" + id).style('height', `${height}px`);
         }
 
@@ -623,13 +623,22 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         }
         console.log(lines);
         let table = `<table style='
+        margin: 0 auto;
+        width: 100%;
         text-align: center;
         font-size: ${layout.props.lineFontSize}px; 
         font-weight: ${layout.props.lineFontWeight ? 'bold' : 'normal'};'>`;
         for (let i = 0; i < lines.length; i++) {
+          if (i === 0) {
+            table += `<tr>`;
+            lines[i].forEach(d => {
+              table += `<td style="color: black; width: ${width / lines[i].length}px;">${d.x}</td>`
+            });
+            table += `</tr>`;
+          }
           table += `<tr>`;
           lines[i].forEach(d => {
-            table += `<td style="color: ${d.textColor}; width: ${width / lines[i].length}px">${d.formatted}</td>`
+            table += `<td style="color: ${d.textColor}; width: ${width / lines[i].length}px;">${d.formatted}</td>`
           });
           table += `</tr>`;
         }
