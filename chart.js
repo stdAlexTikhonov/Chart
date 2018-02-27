@@ -163,6 +163,8 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
 
         if (layout.props.typeBar == "stacked") {
+          maxY = stackMaxY;
+          minY = stackMinY;
           // d3.layout.stack()(
           var stacked = causesBars.map(function (c) {
             return data.map(function (d) {
@@ -230,7 +232,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
         var x = d3.scale.ordinal()
           .domain(data.map(function (d) { return d[dimension]; }))
-          .rangeBands([0, width], 0.1);
+          .rangeBands([layout.props.axisY && !hc.qMeasureInfo[0].line ? 30 + layout.props.axisFontSize * 2 : 0, width], 0.1);
 
         //На случай grouped
         var x1 = d3.scale.ordinal()
@@ -238,10 +240,14 @@ define(["qlik", "d3", "text!./chart.css", './properties'
           .rangeBands([0, x.rangeBand()]);
 
 
+        let minHeight = height - 10 - (layout.props.axisX == 1 ? (20 + layout.props.axisFontSize / 2) : 0) - layout.props.lineTextOffset,
+          maxHeight = 10 + layout.props.lineTextOffset;
+
 
         var y = d3.scale.linear()
           .domain([minY, maxY])
-          .range([height - 10 - (layout.props.axisX == 1 ? (20 + layout.props.axisFontSize / 2) : 0) - layout.props.lineTextOffset, 10 + layout.props.lineTextOffset]);
+          .range([minHeight, maxHeight]);
+
 
 
 
@@ -442,21 +448,22 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
           chart.append("g")
             .attr("class", "x axis")
-            .attr("transform", `translate(0,${height - (15 + layout.props.axisFontSize / 2)})`)
+            .attr("transform", `translate(0,${height - ((hc.qMeasureInfo[0].line ? 15 : 30) + layout.props.axisFontSize / 2)})`)
             .call(xAxis)
         } else {
           chart.select('x ')
             .style("display", 'none')
         }
 
-        // if (layout.props.axisY == 1) {
-        //   chart.append("g")
-        //     .attr("class", "y axis")
-        //     .call(yAxis)
-        // } else if (layout.props.axisY == 0) {
-        //   chart.select('y')
-        //     .style("display", 'none')
-        // }
+        if (layout.props.axisY == 1 && !hc.qMeasureInfo[0].line) {
+          chart.append("g")
+            .attr("class", "y axis")
+            .attr("transform", `translate(${30 + layout.props.axisFontSize * 2},0)`)
+            .call(yAxis)
+        } else if (layout.props.axisY == 0) {
+          chart.select('y')
+            .style("display", 'none')
+        }
 
         $('.axis text').css({ 'fill': '#707070', 'font': `${layout.props.axisFontSize}px sans-serif`, 'font-weight': layout.props.axisFontWeight ? 'bold' : 'normal' });
         $('.axis path, .axis line').css({ 'fill': 'none', 'stroke': '#CCC', 'shape-rendering': 'crispEdges' });
@@ -624,7 +631,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         console.log(lines);
         let table = `<table style='
         margin: 0 auto;
-        width: 98%;
+        width: ${width};
         text-align: center;
         font-size: ${layout.props.lineFontSize}px; 
         font-weight: ${layout.props.lineFontWeight ? 'bold' : 'normal'};'>`;
