@@ -102,7 +102,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         console.log('allMeasures', allMeasures);
 
         var totals = [],
-          currVal,
+          currVal = hc.qDataPages[0].qMatrix[0][0].qText,
           spy = [];
 
         if (hc.qDimensionInfo.length > 1) {
@@ -110,16 +110,18 @@ define(["qlik", "d3", "text!./chart.css", './properties'
           for (var r = 0; r < hc.qDataPages[0].qMatrix.length; r++) {
             currVal = hc.qDataPages[0].qMatrix[r][0].qText;//для отслежки когда пушить строчку
 
-            var arr = hc.qDataPages[0].qMatrix[r];
-
-            row[arr[1].qText] = arr[2].qText;
-
             if (spy.indexOf(currVal) < 0) {//для отслежки когда пушить строчку
               spy.push(currVal);
               row[allMeasures[0]] = hc.qDataPages[0].qMatrix[r][0].qText;
               data.push(row);
               row = Object.create(null);
             };
+
+            var arr = hc.qDataPages[0].qMatrix[r];
+            console.log(arr[1].qText, arr[2].qText);
+            console.log(row);
+            row[arr[1].qText] = arr[2].qNum;
+            row[arr[1].qText + '_f'] = arr[2].qText;
 
           }
           // for (var r = 0; r < hc.qDataPages[0].qMatrix.length; r++) {
