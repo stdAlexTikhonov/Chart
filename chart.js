@@ -68,6 +68,12 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         var bartitles = [];
         var legendColors = [];
 
+        userColors = [
+          'red', 'green', 'blue', 'yellow', 'lightblue',
+          'pink', 'brown', 'orange', 'magenta', 'coral',
+          'red', 'blue', 'green', 'yellow'
+        ];
+
 
         allMeasures.push(hc.qDimensionInfo[0].qFallbackTitle);
         for (var i = 0; i < hc.qMeasureInfo.length; i++) {
@@ -85,18 +91,49 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
         if (hc.qDimensionInfo.length > 1) {
           allMeasures.splice(1), causesBars = [], bartitles = [];
-          hc.qDataPages[0].qMatrix.forEach(e => {
-            allMeasures.push(e[1].qText);
-            bartitles.push(e[1].qText);
-            causesBars.push({ title: e[1].qText, color: 'lightblue', textColor: 'black' })
+          hc.qDataPages[0].qMatrix.forEach((e, i) => {
+            if (allMeasures.indexOf(e[1].qText) < 0) {
+              allMeasures.push(e[1].qText);
+              bartitles.push(e[1].qText);
+              causesBars.push({ title: e[1].qText, color: userColors[i], textColor: 'black' })
+            }
           })
         }
+        console.log('allMeasures', allMeasures);
 
-
-        var totals = [];
+        var totals = [],
+          currVal,
+          spy = [];
 
         if (hc.qDimensionInfo.length > 1) {
-          console.log("hello")
+          row = {};
+          for (var r = 0; r < hc.qDataPages[0].qMatrix.length; r++) {
+            currVal = hc.qDataPages[0].qMatrix[r][0].qText;//для отслежки когда пушить строчку
+
+            var arr = hc.qDataPages[0].qMatrix[r];
+
+            row[arr[1].qText] = arr[2].qText;
+
+            if (spy.indexOf(currVal) < 0) {//для отслежки когда пушить строчку
+              spy.push(currVal);
+              row[allMeasures[0]] = hc.qDataPages[0].qMatrix[r][0].qText;
+              data.push(row);
+              row = Object.create(null);
+            };
+
+          }
+          // for (var r = 0; r < hc.qDataPages[0].qMatrix.length; r++) {
+          //   row = {};
+          //   var arr = hc.qDataPages[0].qMatrix[r];
+          //   for (var c = 0; c < arr.length; c++) {
+          //     if (c == 0) row[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qText;
+          //     else if (c !== 1) {
+          //       row[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qNum;
+          //     }
+
+          //   }
+          //   data.push(row);
+          // }
         } else {
           for (var r = 0; r < hc.qDataPages[0].qMatrix.length; r++) {
             // iterate over all cells within a row
