@@ -83,6 +83,16 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
         }
 
+        if (hc.qDimensionInfo.length > 1) {
+          allMeasures.splice(1), causesBars = [], bartitles = [];
+          hc.qDataPages[0].qMatrix.forEach(e => {
+            allMeasures.push(e[1].qText);
+            bartitles.push(e[1].qText);
+            causesBars.push({ title: e[1].qText, color: 'lightblue', textColor: 'black' })
+          })
+        }
+
+        console.log(allMeasures, causesBars, bartitles)
         var totals = [];
 
         for (var r = 0; r < hc.qDataPages[0].qMatrix.length; r++) {
