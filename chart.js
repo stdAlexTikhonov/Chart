@@ -92,47 +92,53 @@ define(["qlik", "d3", "text!./chart.css", './properties'
           })
         }
 
-        console.log(allMeasures, causesBars, bartitles)
+
         var totals = [];
 
-        for (var r = 0; r < hc.qDataPages[0].qMatrix.length; r++) {
-          // iterate over all cells within a row
-          var arr = hc.qDataPages[0].qMatrix[r];
+        if (hc.qDimensionInfo.length > 1) {
+          console.log("hello")
+        } else {
+          for (var r = 0; r < hc.qDataPages[0].qMatrix.length; r++) {
+            // iterate over all cells within a row
+            var arr = hc.qDataPages[0].qMatrix[r];
 
-          total = 0;
-          totalNegstive = 0;
-          row = {};
-          for (var c = 0; c < arr.length; c++) {
-            if (c == 0) row[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qText;
-            else {
-              row[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qNum;
-              row[allMeasures[c] + '_f'] = hc.qDataPages[0].qMatrix[r][c].qText;
-              if (bartitles.indexOf(allMeasures[c]) > -1) {
-                if (row[allMeasures[c]] < 0) {
-                  totalNegstive += row[allMeasures[c]];
-                } else total += row[allMeasures[c]];
-              }
-            }
-
-            //если есть 2я линия
-            if (c == 2) {
-              let lastPoint;
-              if (r > 0) lastPoint = data[r - 1].diff;
-              if (row[allMeasures[1]] - row[allMeasures[2]] > 0) {
-                row['diff'] = -1;
-              } else if (row[allMeasures[1]] - row[allMeasures[2]] == 0) {
-                row['diff'] = lastPoint;
-              } else {
-                row['diff'] = 1;
+            total = 0;
+            totalNegstive = 0;
+            row = {};
+            for (var c = 0; c < arr.length; c++) {
+              if (c == 0) row[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qText;
+              else {
+                row[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qNum;
+                row[allMeasures[c] + '_f'] = hc.qDataPages[0].qMatrix[r][c].qText;
+                if (bartitles.indexOf(allMeasures[c]) > -1) {
+                  if (row[allMeasures[c]] < 0) {
+                    totalNegstive += row[allMeasures[c]];
+                  } else total += row[allMeasures[c]];
+                }
               }
 
-            }
+              //если есть 2я линия
+              if (c == 2) {
+                let lastPoint;
+                if (r > 0) lastPoint = data[r - 1].diff;
+                if (row[allMeasures[1]] - row[allMeasures[2]] > 0) {
+                  row['diff'] = -1;
+                } else if (row[allMeasures[1]] - row[allMeasures[2]] == 0) {
+                  row['diff'] = lastPoint;
+                } else {
+                  row['diff'] = 1;
+                }
 
+              }
+
+            }
+            data.push(row);
+            totals.push(totalNegstive);
+            totals.push(total);
           }
-          data.push(row);
-          totals.push(totalNegstive);
-          totals.push(total);
         }
+        console.log(data);
+
 
 
         var dimension = allMeasures[0];
