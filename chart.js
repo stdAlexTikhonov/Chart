@@ -76,66 +76,69 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
 
         allMeasures.push(hc.qDimensionInfo[0].qFallbackTitle);
-        for (var i = 0; i < hc.qMeasureInfo.length; i++) {
-          allMeasures.push(hc.qMeasureInfo[i].qFallbackTitle)
-          if (hc.qMeasureInfo[i].line) {
-            shape.push(hc.qMeasureInfo[i].lineShape);
-            causesLines.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, lineWidth: hc.qMeasureInfo[i].lineWidth, dashed: hc.qMeasureInfo[i].dashed });
-          } else {
-            causesBars.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor });
-            bartitles.push(hc.qMeasureInfo[i].qFallbackTitle);
-          }
-          legendColors.push({ color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, meraLegend: hc.qMeasureInfo[i].meraLegend });
-
-        }
-
         if (hc.qDimensionInfo.length > 1) {
-          allMeasures.splice(1), causesBars = [], bartitles = [];
           hc.qDataPages[0].qMatrix.forEach((e, i) => {
             if (allMeasures.indexOf(e[1].qText) < 0) {
               allMeasures.push(e[1].qText);
               bartitles.push(e[1].qText);
               causesBars.push({ title: e[1].qText, color: userColors[i], textColor: 'black' })
             }
-          })
-        }
-        console.log('allMeasures', allMeasures);
+          });
 
-        var totals = [],
-          currVal = hc.qDataPages[0].qMatrix[0][0].qText,
-          spy = [];
+        } else {
+          for (var i = 0; i < hc.qMeasureInfo.length; i++) {
+            allMeasures.push(hc.qMeasureInfo[i].qFallbackTitle)
+            if (hc.qMeasureInfo[i].line) {
+              shape.push(hc.qMeasureInfo[i].lineShape);
+              causesLines.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, lineWidth: hc.qMeasureInfo[i].lineWidth, dashed: hc.qMeasureInfo[i].dashed });
+            } else {
+              causesBars.push({ title: hc.qMeasureInfo[i].qFallbackTitle, color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor });
+              bartitles.push(hc.qMeasureInfo[i].qFallbackTitle);
+            }
+            legendColors.push({ color: hc.qMeasureInfo[i].color, textColor: hc.qMeasureInfo[i].textColor, meraLegend: hc.qMeasureInfo[i].meraLegend });
+
+          }
+        }
+
+
+        var totals = [];
 
         if (hc.qDimensionInfo.length > 1) {
           row = {};
-          for (var r = 0; r < hc.qDataPages[0].qMatrix.length; r++) {
-            currVal = hc.qDataPages[0].qMatrix[r][0].qText;//для отслежки когда пушить строчку
+          //индексы
+          let in_data = hc.qDataPages[0].qMatrix.reduce(function (previousValue, currentValue, index, array) {
+            if (index > 1 && currentValue[0].qText != array[index - 1][0].qText) previousValue.push(index);
+            return previousValue
+          }, [0]);
 
-            if (spy.indexOf(currVal) < 0) {//для отслежки когда пушить строчку
-              spy.push(currVal);
-              row[allMeasures[0]] = hc.qDataPages[0].qMatrix[r][0].qText;
-              data.push(row);
-              row = Object.create(null);
-            };
 
-            var arr = hc.qDataPages[0].qMatrix[r];
-            console.log(arr[1].qText, arr[2].qText);
-            console.log(row);
-            row[arr[1].qText] = arr[2].qNum;
-            row[arr[1].qText + '_f'] = arr[2].qText;
+          for (let i = 1; i < in_data.length; i++) {
+            let arr = hc.qDataPages[0].qMatrix.slice(in_data[i - 1], in_data[i]);
+            var hashmap = arr.reduce(function (previousValue, currentValue, index, array) {
+              previousValue[allMeasures[0]] = currentValue[0].qText;
+              previousValue[currentValue[1].qText] = currentValue[2].qNum;
+              previousValue[currentValue[1].qText + '_f'] = currentValue[2].qText;
+              return previousValue;
+            }, {});
 
+            total = 0;
+            totalNegstive = 0;
+            for (let i = 1; i < allMeasures.length; i++) {
+              if (hashmap[allMeasures[i]]) {
+                if (hashmap[allMeasures[i]] >= 0) {
+                  total += hashmap[allMeasures[i]];
+                } else {
+                  totalNegstive += hashmap[allMeasures[i]];
+                }
+              }
+            }
+
+            data.push(hashmap);
+            if (totalNegstive) totals.push(totalNegstive);
+            if (total) totals.push(total);
           }
-          // for (var r = 0; r < hc.qDataPages[0].qMatrix.length; r++) {
-          //   row = {};
-          //   var arr = hc.qDataPages[0].qMatrix[r];
-          //   for (var c = 0; c < arr.length; c++) {
-          //     if (c == 0) row[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qText;
-          //     else if (c !== 1) {
-          //       row[allMeasures[c]] = hc.qDataPages[0].qMatrix[r][c].qNum;
-          //     }
 
-          //   }
-          //   data.push(row);
-          // }
+
         } else {
           for (var r = 0; r < hc.qDataPages[0].qMatrix.length; r++) {
             // iterate over all cells within a row
@@ -176,7 +179,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
             totals.push(total);
           }
         }
-        console.log(data);
+
 
 
 
@@ -223,10 +226,12 @@ define(["qlik", "d3", "text!./chart.css", './properties'
           // d3.layout.stack()(
           var stacked = causesBars.map(function (c) {
             return data.map(function (d) {
-              return { x: d[dimension], y: d[c.title], formatted: d[c.title + '_f'], textColor: c.textColor };
+              return { x: d[dimension] ? d[dimension] : 0, y: d[c.title] ? d[c.title] : 0, formatted: d[c.title + '_f'], textColor: c.textColor };
             });
           });
+
           if (causesBars.length > 0) barStack(stacked);
+          console.log(stacked);
         } else {
           var grouped = causesBars.map(function (c) {
             return data.map(function (d) {
@@ -683,7 +688,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
 
         }
-        console.log(lines);
+
         let table = `<table style='
         margin: 0 auto;
         width: ${width};
