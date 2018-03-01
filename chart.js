@@ -68,11 +68,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         var bartitles = [];
         var legendColors = [];
 
-        userColors = [
-          'red', 'green', 'blue', 'yellow', 'lightblue',
-          'pink', 'brown', 'orange', 'magenta', 'coral',
-          'red', 'blue', 'green', 'yellow'
-        ];
+
 
 
         allMeasures.push(hc.qDimensionInfo[0].qFallbackTitle);
@@ -81,7 +77,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
             if (allMeasures.indexOf(e[1].qText) < 0) {
               allMeasures.push(e[1].qText);
               bartitles.push(e[1].qText);
-              causesBars.push({ title: e[1].qText, color: userColors[i], textColor: 'black' })
+              causesBars.push({ title: e[1].qText, color: '#f4f4f4', textColor: 'black' })
             }
           });
 
@@ -209,6 +205,26 @@ define(["qlik", "d3", "text!./chart.css", './properties'
 
         stackMinY = stackMinY > 0 ? 0 : stackMinY;
 
+        // let userColors = d3.scale.linear()
+        //   .domain([minY, maxY])
+        //   .range([layout.props.dimColor1, layout.props.dimColor2]);
+        let colorList = layout.props.dimColor.split(',');
+
+        if (colorList.length == 2) {
+          var userColors = d3.scale.linear().domain([minY, maxY])
+            .interpolate(d3.interpolateRgb)
+            .range(colorList);
+        } else {
+          // var userColor = d3.scaleOrdinal(colorList);
+          var userColors = d3.scale.ordinal()
+            .domain(hc.qDataPages[0].qMatrix.map(e => e[2].qNum))
+            .range(colorList)
+
+        }
+
+
+
+
 
         var lines = causesLines.map(function (c, line_i) {
           return data.map(function (d) {
@@ -226,16 +242,16 @@ define(["qlik", "d3", "text!./chart.css", './properties'
           // d3.layout.stack()(
           var stacked = causesBars.map(function (c) {
             return data.map(function (d) {
-              return { x: d[dimension] ? d[dimension] : 0, y: d[c.title] ? d[c.title] : 0, formatted: d[c.title + '_f'], textColor: c.textColor };
+              return { x: d[dimension] ? d[dimension] : 0, y: isNaN(d[c.title]) ? 0 : d[c.title], formatted: d[c.title + '_f'], textColor: c.textColor };
             });
           });
 
           if (causesBars.length > 0) barStack(stacked);
-          console.log(stacked);
+
         } else {
           var grouped = causesBars.map(function (c) {
             return data.map(function (d) {
-              return { x: d[dimension], y: d[c.title], formatted: d[c.title + '_f'], textColor: c.textColor };
+              return { x: d[dimension] ? d[dimension] : 0, y: d[c.title] || !isNaN(d[c.title]) ? d[c.title] : 0, formatted: d[c.title + '_f'], textColor: c.textColor };
             });
           });
         }
@@ -345,8 +361,6 @@ define(["qlik", "d3", "text!./chart.css", './properties'
             .data(stacked)
             .enter().append("g")
             .attr("class", "layer")
-            .style("fill", function (d, i) { return causesBars[i].color; })
-
 
           rects.selectAll("rect")
             .data(function (d) { return d; })
@@ -354,7 +368,11 @@ define(["qlik", "d3", "text!./chart.css", './properties'
             .attr("x", function (d) { return x(d.x); })
             .attr("y", function (d) { return y(d.y0); }) //y(d.y + d.y0);
             .attr("height", function (d) { return y(0) - y(d.size); })//y(d.y0) - y(d.y + d.y0);
-            .attr("width", x.rangeBand() - 1);
+            .attr("width", x.rangeBand() - 1)
+            .style("fill", function (d, i) {
+
+              return userColors(d.size);
+            })
 
           if (layout.props.barsValues) {
             rects.selectAll('text')

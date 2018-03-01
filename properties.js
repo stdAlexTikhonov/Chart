@@ -490,6 +490,15 @@ define([], function () {
 		expression: "always"
 	};
 
+	var dimColor = {
+		label: "Цвет 1",
+		ref: "props.dimColor",
+		type: "string",
+		defaultValue: 'green',
+		expression: "always"
+	};
+
+
 	var meraLegend = {
 		label: "Наименование метки",
 		ref: "qDef.meraLegend",
@@ -517,6 +526,7 @@ define([], function () {
 				type: "items",
 				label: "Столбцы",
 				items: {
+					dimColor: dimColor,
 					barsType: type,
 					barsValues: barsValues,
 					barTextOffset: barTextOffset,
