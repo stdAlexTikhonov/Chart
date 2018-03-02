@@ -492,7 +492,7 @@ define([], function () {
 
 	var dimColor = {
 		label: "Цвет 1",
-		ref: "props.dimColor",
+		ref: "qDef.dimColor",
 		type: "string",
 		defaultValue: 'green',
 		expression: "always"
@@ -526,7 +526,6 @@ define([], function () {
 				type: "items",
 				label: "Столбцы",
 				items: {
-					dimColor: dimColor,
 					barsType: type,
 					barsValues: barsValues,
 					barTextOffset: barTextOffset,
@@ -574,7 +573,10 @@ define([], function () {
 		component: "accordion",
 		items: {
 			dimensions: {
-				uses: "dimensions"
+				uses: "dimensions",
+				items: {
+					dimColor: dimColor
+				}
 			},
 			measures: {
 				uses: "measures",

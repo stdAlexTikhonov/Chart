@@ -49,7 +49,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         exportData: true
       },
       paint: function ($element, layout) {
-
+        let self = this;
         var hc = layout.qHyperCube;
         var id = '_' + layout.qInfo.qId;
 
@@ -77,10 +77,9 @@ define(["qlik", "d3", "text!./chart.css", './properties'
             if (allMeasures.indexOf(e[1].qText) < 0) {
               allMeasures.push(e[1].qText);
               bartitles.push(e[1].qText);
-              causesBars.push({ title: e[1].qText, color: '#f4f4f4', textColor: 'black' })
+              causesBars.push({ title: e[1].qText, color: e[2].qText, textColor: 'black', elNum: e[0].qElemNumber })
             }
           });
-
         } else {
           for (var i = 0; i < hc.qMeasureInfo.length; i++) {
             allMeasures.push(hc.qMeasureInfo[i].qFallbackTitle)
@@ -100,6 +99,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         var totals = [];
 
         if (hc.qDimensionInfo.length > 1) {
+          console.log(hc.qDataPages[0].qMatrix);
           row = {};
           //индексы
           let in_data = hc.qDataPages[0].qMatrix.reduce(function (previousValue, currentValue, index, array) {
@@ -107,13 +107,13 @@ define(["qlik", "d3", "text!./chart.css", './properties'
             return previousValue
           }, [0]);
 
-
-          for (let i = 1; i < in_data.length; i++) {
+          for (let i = 1; i < in_data.length + 1; i++) {
             let arr = hc.qDataPages[0].qMatrix.slice(in_data[i - 1], in_data[i]);
+            console.log(arr);
             var hashmap = arr.reduce(function (previousValue, currentValue, index, array) {
               previousValue[allMeasures[0]] = currentValue[0].qText;
-              previousValue[currentValue[1].qText] = currentValue[2].qNum;
-              previousValue[currentValue[1].qText + '_f'] = currentValue[2].qText;
+              previousValue[currentValue[1].qText] = currentValue[3] ? currentValue[3].qNum : 0;
+              previousValue[currentValue[1].qText + '_f'] = currentValue[3].qText;
               return previousValue;
             }, {});
 
@@ -208,19 +208,19 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         // let userColors = d3.scale.linear()
         //   .domain([minY, maxY])
         //   .range([layout.props.dimColor1, layout.props.dimColor2]);
-        let colorList = layout.props.dimColor.split(',');
+        // let colorList = layout.props.dimColor.split(',');
 
-        if (colorList.length == 2) {
-          var userColors = d3.scale.linear().domain([minY, maxY])
-            .interpolate(d3.interpolateRgb)
-            .range(colorList);
-        } else {
-          // var userColor = d3.scaleOrdinal(colorList);
-          var userColors = d3.scale.ordinal()
-            .domain(hc.qDataPages[0].qMatrix.map(e => e[2].qNum))
-            .range(colorList)
+        // if (colorList.length == 2) {
+        //   var userColors = d3.scale.linear().domain([minY, maxY])
+        //     .interpolate(d3.interpolateRgb)
+        //     .range(colorList);
+        // } else {
+        //   // var userColor = d3.scaleOrdinal(colorList);
+        //   var userColors = d3.scale.ordinal()
+        //     .domain(hc.qDataPages[0].qMatrix.map(e => e[2].qNum))
+        //     .range(colorList)
 
-        }
+        // }
 
 
 
@@ -242,7 +242,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
           // d3.layout.stack()(
           var stacked = causesBars.map(function (c) {
             return data.map(function (d) {
-              return { x: d[dimension] ? d[dimension] : 0, y: isNaN(d[c.title]) ? 0 : d[c.title], formatted: d[c.title + '_f'], textColor: c.textColor };
+              return { x: d[dimension] ? d[dimension] : 0, y: isNaN(d[c.title]) ? 0 : d[c.title], formatted: d[c.title + '_f'], textColor: c.textColor, color: c.color, elNum: c.elNum };
             });
           });
 
@@ -251,7 +251,7 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         } else {
           var grouped = causesBars.map(function (c) {
             return data.map(function (d) {
-              return { x: d[dimension] ? d[dimension] : 0, y: d[c.title] || !isNaN(d[c.title]) ? d[c.title] : 0, formatted: d[c.title + '_f'], textColor: c.textColor };
+              return { x: d[dimension] ? d[dimension] : 0, y: d[c.title] || !isNaN(d[c.title]) ? d[c.title] : 0, formatted: d[c.title + '_f'], textColor: c.textColor, color: c.color, elNum: c.elNum };
             });
           });
         }
@@ -369,9 +369,13 @@ define(["qlik", "d3", "text!./chart.css", './properties'
             .attr("y", function (d) { return y(d.y0); }) //y(d.y + d.y0);
             .attr("height", function (d) { return y(0) - y(d.size); })//y(d.y0) - y(d.y + d.y0);
             .attr("width", x.rangeBand() - 1)
+            .attr("class", "selectable")
+            .attr("data-value", function (d) {
+              return d.elNum;
+            })
+            .attr("data-dim", hc.qDimensionInfo[0].qFallbackTitle)
             .style("fill", function (d, i) {
-
-              return userColors(d.size);
+              return d.color;
             })
 
           if (layout.props.barsValues) {
@@ -441,13 +445,14 @@ define(["qlik", "d3", "text!./chart.css", './properties'
           var rects = chart.append("g").selectAll("g")
             .data(grouped)
             .enter().append("g")
-            .style("fill", function (d, i) { return causesBars[i].color; })
+            .style("fill", function (d, i) { return d.color; })
             .attr("transform", function (d, i) { return "translate(" + x1(i) + ",0)"; });
 
           rects.selectAll("rect")
             .data(function (d) { return d; })
             .enter().append("rect")
             .attr("width", x1.rangeBand())
+            .attr('class', 'selectable')
             .attr("height", function (d) {
               if (d.y >= 0) return y(0) - y(d.y);
               else return y(d.y) - y(0);
@@ -747,6 +752,15 @@ define(["qlik", "d3", "text!./chart.css", './properties'
         //       DOMURL.revokeObjectURL(png);
         //   };
         //   img.src = url;
+
+        $element.find('.selectable').on('qv-activate', function () {
+          console.log(1);
+          if (this.hasAttribute("data-value")) {
+            var value = parseInt(this.getAttribute("data-value"), 10)
+            self.backendApi.selectValues(0, [value], true);
+            $element.find("[data-value='" + value + "']").toggleClass("selected");
+          }
+        });
 
         return qlik.Promise.resolve();
 
