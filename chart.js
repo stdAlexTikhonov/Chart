@@ -445,12 +445,13 @@ define(["qlik", "d3", "text!./chart.css", './properties'
           var rects = chart.append("g").selectAll("g")
             .data(grouped)
             .enter().append("g")
-            .style("fill", function (d, i) { return d.color; })
+           
             .attr("transform", function (d, i) { return "translate(" + x1(i) + ",0)"; });
 
           rects.selectAll("rect")
             .data(function (d) { return d; })
             .enter().append("rect")
+            .style("fill", function (d, i) { return d.color; })
             .attr("width", x1.rangeBand())
             .attr('class', 'selectable')
             .attr("height", function (d) {
